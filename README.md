@@ -49,17 +49,25 @@ Simple front-end framework to build reactive and interactive web apps.
 - Runtime included, so it can be used within the browser (Jsdeliver, Unpkg)
 - Can be bundled from Node.js, Typescript, or any JS runtime that supports ES6 imports or CommonJS require syntax
 
+[summary](#summary)
+
 ## Getting started
 
 _Following next._
+
+[summary](#summary)
 
 ## Examples
 
 _Following next._
 
+[summary](#summary)
+
 ## Tips
 
 - [Easier debug experience](#easier-debug)
+
+[summary](#summary)
 
 ### Easier debug experience
 
@@ -74,3 +82,5 @@ Error message will tell you the exact element the error occured on if this eleme
 <!-- Error message specifically target this element -->
 <div id="score" data-luscent-value="score"></div>
 ```
+
+[tips](#tips)
