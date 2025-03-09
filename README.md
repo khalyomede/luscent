@@ -40,6 +40,8 @@ Simple front-end framework to build reactive and interactive web apps.
 ## Features
 
 - HTML-based reactivity system (no extra syntax to learn)
+- No build tool required to get started
+- First working app in ~ 5 mins
 - Simple reactivity in ~ 15 lines of Javascript
 - Provides state management and one way/two way data binding out of the box
 - IDE completion friendly and LLM friendly thanks to its first-party support for Typescript
