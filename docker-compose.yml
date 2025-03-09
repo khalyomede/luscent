@@ -1,0 +1,8 @@
+services:
+  npm:
+    image: node:23-alpine
+    entrypoint: npm
+    user: node
+    working_dir: /home/node/luscent
+    volumes:
+      - .:/home/node/luscent

@@ -1,0 +1,21 @@
+{
+    "include": [
+        "src"
+    ],
+    "compilerOptions": {
+        // Type safety options
+        "strict": true,
+        "alwaysStrict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitOverride": true,
+        "useUnknownInCatchVariables": true,
+        "strictBindCallApply": true
+    }
+}

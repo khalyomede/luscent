@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Increment Demo - Luscent</title>
+    <script src="index.js"></script>
+    <script>
+        const { start } = window.luscent;
+
+        start({
+            state: {
+                value: 0,
+            },
+            methods: {
+                increment: (state) => ({
+                    value: state.value + 1,
+                }),
+                decrement: (state) => ({
+                    value: state.value - 1,
+                }),
+            },
+        });
+    </script>
+</head>
+
+<body>
+    <button data-luscent-on-click="increment">+</button>
+    <div data-luscent-value="value"></div>
+    <button data-luscent-on-click="decrement">-</button>
+</body>
+
+</html>
