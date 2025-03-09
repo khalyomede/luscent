@@ -1,2 +1,2 @@
-declare const start: () => void;
+import start from "./start";
 export { start };
