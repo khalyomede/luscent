@@ -36,6 +36,7 @@ Simple front-end framework to build reactive and interactive web apps.
 - [Features](#features)
 - [Getting started](#getting-started)
 - [Examples](#examples)
+- [Tips](#tips)
 
 ## Features
 
@@ -55,3 +56,21 @@ _Following next._
 ## Examples
 
 _Following next._
+
+## Tips
+
+- [Easier debug experience](#easier-debug)
+
+### Easier debug experience
+
+While not mandatory, try to assign a unique "id" attribute to all the element that uses "data-luscent-*" attributes.
+
+Error message will tell you the exact element the error occured on if this element declares an id. This may help you find an issue faster using your IDE search.
+
+```html
+<!-- Error message not specific to this particular element -->
+<div data-luscent-value="score"></div>
+
+<!-- Error message specifically target this element -->
+<div id="score" data-luscent-value="score"></div>
+```
