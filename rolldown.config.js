@@ -27,6 +27,18 @@ export default defineConfig([
             typescript(),
         ],
     },
+    // Web browser compatible (UMD) - plain - todo example
+    {
+        input: "src/index.ts",
+        output: {
+            format: "umd",
+            file: "examples/todo/index.js",
+            name: "luscent",
+        },
+        plugins: [
+            typescript(),
+        ],
+    },
     // Web browser compatible (UMD) - minified
     {
         input: "src/index.ts",

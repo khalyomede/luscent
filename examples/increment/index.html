@@ -9,7 +9,7 @@
 
 <body>
     <button data-luscent-on-click="increment">+</button>
-    <div data-luscent-value="value"></div>
+    <div data-luscent-value="score"></div>
     <button data-luscent-on-click="decrement">-</button>
 
     <script src="index.js"></script>
@@ -28,6 +28,9 @@
                     decrement: (state) => ({
                         value: state.value - 1,
                     }),
+                },
+                getters: {
+                    score: ({ value }) => value,
                 },
             });
         });

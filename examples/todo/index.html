@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo demo - Luscent</title>
+</head>
+
+<body>
+    <form data-luscent-on-submit="addTodo">
+        <input type="text" data-luscent-on-input-bind="taskTitle" />
+        <button type="submit">add</button>
+    </form>
+    <p data-luscent-if="noTodoAdded">
+        Please use the form below to add your tasks.
+    </p>
+    <!-- <ul data-luscent-if="someTodoAdded">
+        <li data-luscent-for="taskList" data-luscent-as="task">
+            <span data-luscent-value="task.title"></span>
+        </li>
+    </ul> -->
+    <p>
+        <span data-luscent-value="tasksCount"></span>
+    </p>
+
+    <script src="index.js"></script>
+    <script>
+        const { start } = window.luscent;
+
+        start({
+            state: {
+                taskTitle: "",
+                tasks: [],
+            },
+            methods: {
+                addTodo: (state) => ({
+                    ...state,
+                    tasks: [
+                        ...state.tasks,
+                        { title: state.taskTitle },
+                    ],
+                }),
+            },
+            getters: {
+                someTodoAdded: ({ tasks }) => tasks.length > 0,
+                noTodoAdded: ({ tasks }) => tasks.length === 0,
+                tasksCount: ({ tasks }) => tasks.length,
+            },
+        });
+    </script>
+</body>
+
+</html>

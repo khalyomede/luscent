@@ -16,6 +16,10 @@
         "exactOptionalPropertyTypes": true,
         "noImplicitOverride": true,
         "useUnknownInCatchVariables": true,
-        "strictBindCallApply": true
+        "strictBindCallApply": true,
+        "lib": [
+            "ES2015",
+            "DOM",
+        ]
     }
 }

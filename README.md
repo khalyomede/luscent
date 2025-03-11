@@ -15,15 +15,20 @@ Simple front-end framework to build reactive and interactive web apps.
 
     start({
       state: {
-        score: 0
+        value: 0
       },
       methods: {
         increment: (state) => ({
+          ...state,
           value: state.value + 1,
         }),
         decrement: (state) => ({
+          ...state,
           value: state.value - 1,
         }),
+      },
+      getters: {
+        score: ({ value }) => value,
       },
     });
   </script>

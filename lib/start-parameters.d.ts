@@ -1,4 +1,5 @@
 import Method from "./method";
+import Getter from "./getter";
 /**
  * This is the definition of the main entry point of your app.
  *
@@ -9,5 +10,6 @@ import Method from "./method";
 interface StartParameters<T> {
     state?: T;
     methods?: Record<string, Method<T>>;
+    getters: Record<string, Getter<T>>;
 }
 export default StartParameters;
