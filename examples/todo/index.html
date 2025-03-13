@@ -12,17 +12,21 @@
         <input type="text" data-luscent-on-input-bind="taskTitle" />
         <button type="submit">add</button>
     </form>
-    <p data-luscent-if="noTodoAdded">
-        Please use the form below to add your tasks.
-    </p>
-    <ul data-luscent-if="someTodoAdded">
-        <li data-luscent-for="taskList" data-luscent-as="task">
-            <span data-luscent-value="task.title"></span>
-        </li>
-    </ul>
+    <p data-luscent-if="noTodoAdded" data-luscent-template="no-todo-added"></p>
+    <ul data-luscent-if="someTodoAdded" data-luscent-template="todo-list"></ul>
     <p>
         <span data-luscent-value="tasksCount"></span>
     </p>
+
+    <template id="no-todo-added">
+        Please use the form below to add your tasks.
+    </template>
+
+    <template id="todo-list">
+        <li data-luscent-for="taskList" data-luscent-as="task">
+            <span data-luscent-value="task.title"></span>
+        </li>
+    </template>
 
     <script src="index.js"></script>
     <script>

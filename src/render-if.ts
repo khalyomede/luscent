@@ -9,7 +9,7 @@ const renderIf = <T>(context: Context<T>, conditions: Record<string, Condition<T
 
     for (const element of elements) {
         if (!(element instanceof HTMLElement)) {
-            return;
+            continue;
         }
 
         const elementId = element.id;
@@ -23,7 +23,7 @@ const renderIf = <T>(context: Context<T>, conditions: Record<string, Condition<T
                 console.warn("An element cannot be shown/hidden because data-luscent-if target an empty key.");
             }
 
-            return;
+            continue;
         }
 
         if (!(key in conditions)) {
@@ -31,18 +31,42 @@ const renderIf = <T>(context: Context<T>, conditions: Record<string, Condition<T
                 console.warn(`The element with id "${elementId}" could not be shown/hidden because it uses data-luscent-if="${key}" but no conditions was found with this key`);
             } else {
                 console.warn(`An element could not be shown/hidden because it uses data-luscent-if="${key}" but no conditions was found with this key`);
-
             }
 
-            return;
+            continue;
         }
 
         const value = conditions[key](context.state);
 
         if (value) {
-            element.style.removeProperty('display');
+            const templateId = element.dataset.luscentTemplate;
+
+            if (templateId === undefined) {
+                if (elementHasId) {
+                    console.warn(`The element with id "${elementId}" could not be shown/hidden because it has an empty data-luscent-template`);
+                } else {
+                    console.warn(`An element could not be shown/hidden because it has an empty data-luscent-template`);
+                }
+
+                continue;
+            }
+
+            const template = document.getElementById(templateId);
+
+            if (template === null || !(template instanceof HTMLTemplateElement)) {
+                if (elementHasId) {
+                    console.warn(`The element with id "${elementId}" could not be shown/hidden because no template exist with id empty data-luscent-template="${templateId}"`);
+                } else {
+                    console.warn(`An element could not be shown/hidden because no template exist with id empty data-luscent-template="${templateId}"`);
+                }
+
+                continue;
+            }
+
+            element.textContent = "";
+            element.appendChild(template.content.cloneNode(true));
         } else {
-            element.style.display = 'none';
+            element.textContent = "";
         }
     }
 };
