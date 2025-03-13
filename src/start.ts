@@ -1,6 +1,8 @@
 import StartParameters from "./start-parameters";
 import updateDOM from "./update-dom";
 import bindEvents from "./bind-events";
+import bindTwoWay from "./bind-two-way";
+import Context from "./context";
 
 /**
  * This is the function to call to start your reactive app.
@@ -14,9 +16,16 @@ import bindEvents from "./bind-events";
 const start = <T>(parameters: StartParameters<T>) => {
     var state = parameters.state || {} as T;
     const methods = parameters.methods || {};
+    const getters = parameters.getters || {};
+    const conditions = parameters.conditions;
 
-    updateDOM(state);
-    bindEvents(methods, state);
+    const context: Context<T> = {
+        state,
+    };
+
+    updateDOM(context, getters, conditions);
+    bindEvents(context, getters, methods, conditions);
+    bindTwoWay(context, getters, conditions);
 
     console.log("Luscent app started successfully");
 }
