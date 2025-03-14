@@ -16,6 +16,9 @@ const renderIf = <T>(context: Context<T>, conditions: Record<string, Condition<T
         const elementHasId = elementId.length > 0;
         const key = element.dataset.luscentIf;
 
+        /**
+         * œtodo Use didyoumean2 to suggest (for typos).
+         */
         if (key === undefined) {
             if (elementHasId) {
                 console.warn(`The element with id "${elementId}" cannot be shown/hidden because data-luscent-if target an empty key.`);

@@ -17,15 +17,16 @@ const start = <T>(parameters: StartParameters<T>) => {
     var state = parameters.state || {} as T;
     const methods = parameters.methods || {};
     const getters = parameters.getters || {};
-    const conditions = parameters.conditions;
+    const conditions = parameters.conditions || {};
+    const lists = parameters.lists || {};
 
     const context: Context<T> = {
         state,
     };
 
-    updateDOM(context, getters, conditions);
-    bindEvents(context, getters, methods, conditions);
-    bindTwoWay(context, getters, conditions);
+    updateDOM(context, getters, conditions, lists);
+    bindEvents(context, getters, methods, conditions, lists);
+    bindTwoWay(context, getters, conditions, lists);
 
     console.log("Luscent app started successfully");
 }
