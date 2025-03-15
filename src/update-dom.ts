@@ -6,6 +6,7 @@ import renderFor from "./render-for";
 import List from "./list";
 import renderValue from "./render-value";
 import Method from "./method";
+import bindEvents from "./bind-events";
 
 /**
  * The function will take a state.
@@ -21,6 +22,8 @@ const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, m
     if (lists) {
         renderFor(context, getters, methods, conditions, lists, element);
     }
+
+    bindEvents(context, getters, methods, conditions, lists, element);
 }
 
 export default updateDOM;

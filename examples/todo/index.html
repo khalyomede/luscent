@@ -38,6 +38,8 @@
                 </div>
                 <div data-luscent-if="noTasks" data-luscent-template="empty-tasks-disclaimer"></div>
                 <div data-luscent-if="someTasks" data-luscent-template="tasks-list"></div>
+                <div data-luscent-if="someCompletedTasks" data-luscent-template="completed-tasks-list" class="mt-5">
+                </div>
             </div>
         </div>
     </main>
@@ -51,8 +53,19 @@
 
     <template id="incomplete-tasks">
         <li class="list-group-item d-flex align-items-center gap-3">
-            <input class="form-check-input" type="checkbox" value="" id="firstCheckboxStretched">
+            <input class="form-check-input" type="checkbox" value="" id="firstCheckboxStretched"
+                data-luscent-on-change="markTaskAsCompleted" data-luscent-id="id">
             <label class="form-check-label flex-grow-1" for="firstCheckboxStretched" data-luscent-value="title"></label>
+            <button class="btn btn-sm btn-outline-danger" data-luscent-on-click="deleteTask"
+                data-luscent-id="id">delete</button>
+        </li>
+    </template>
+
+    <template id="completed-tasks">
+        <li class="list-group-item disabled d-flex align-items-center gap-3">
+            <input class="form-check-input" type="checkbox" checked data-luscent-on-change="markTaskAsIncomplete"
+                data-luscent-id="id">
+            <label class="form-check-label flex-grow-1 text-decoration-line-through" data-luscent-value="title"></label>
             <button class="btn btn-sm btn-outline-danger" data-luscent-on-click="deleteTask"
                 data-luscent-id="id">delete</button>
         </li>
@@ -67,7 +80,21 @@
         </div>
         <div class="row mt-3">
             <div class="col col-12 text-secondary">
-                <span data-luscent-value="numberOfTasks"></span> tasks displayed.
+                <span data-luscent-value="numberOfTasksToComplete"></span> remaining task(s).
+            </div>
+        </div>
+    </template>
+
+    <template id="completed-tasks-list">
+        <div class="row">
+            <div class="col col-12">
+                <ul class="list-group" data-luscent-for="completedTasks" data-luscent-template="completed-tasks">
+                </ul>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col col-12 text-secondary">
+                <span data-luscent-value="numberOfCompletedTasks"></span> completed task(s).
             </div>
         </div>
     </template>
@@ -104,33 +131,43 @@
                             newTaskTitle: ""
                         };
                     },
-                    toggleTask: (state, event) => {
-                        const taskId = parseInt(event.target.closest('[data-task-id]')?.getAttribute('data-task-id'));
-
-                        if (!taskId) {
-                            return state;
-                        }
-
-                        return {
-                            ...state,
-                            tasks: state.tasks.map(task =>
-                                task.id === taskId
-                                    ? { ...task, completed: !task.completed }
-                                    : task
-                            )
-                        };
-                    },
                     deleteTask: (state, event, id) => ({
                         ...state,
                         tasks: state.tasks.filter((task) => task.id != id)
                     }),
+                    markTaskAsCompleted: (state, event, id) => ({
+                        ...state,
+                        tasks: state.tasks.map((task) => task.id == id
+                            ? {
+                                ...task,
+                                completed: true,
+                            }
+                            : task
+                        )
+                    }),
+                    markTaskAsIncomplete: (state, event, id) => {
+                        console.log(`marking task ${id} as incomplete`);
+
+                        return {
+                            ...state,
+                            tasks: state.tasks.map((task) => task.id == id
+                                ? {
+                                    ...task,
+                                    completed: false,
+                                }
+                                : task
+                            )
+                        };
+                    },
                 },
                 getters: {
-                    numberOfTasks: ({ tasks }) => tasks.length
+                    numberOfTasksToComplete: ({ tasks }) => tasks.filter((task) => !task.completed).length,
+                    numberOfCompletedTasks: ({ tasks }) => tasks.filter((task) => task.completed).length,
                 },
                 conditions: {
                     noTasks: ({ tasks }) => tasks.length === 0,
-                    someTasks: ({ tasks }) => tasks.length > 0,
+                    someTasks: ({ tasks }) => tasks.filter((task) => !task.completed).length > 0,
+                    someCompletedTasks: ({ tasks }) => tasks.filter((task) => task.completed).length > 0,
                 },
                 lists: {
                     incompleteTasks: ({ tasks }) => tasks.filter(task => !task.completed),

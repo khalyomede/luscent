@@ -96,49 +96,6 @@ var renderId = function(element, item) {
 var render_id_default = renderId;
 
 //#endregion
-//#region src/bind-events.ts
-/**
-* This method registers the event handler that react to DOM events.
-*
-* Each events goal is to return a new state to trigger a new UI change.
-*/
-var bindEvents = function(context, getters, methods, conditions, lists, element) {
-	var _a;
-	var target = element !== null && element !== void 0 ? element : document;
-	var xpathExpression = "//*[./@*[starts-with(name(), \"data-luscent-on-\")]]";
-	var xpathResult = document.evaluate(xpathExpression, target, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-	var _loop_1 = function(i$1) {
-		var node = xpathResult.snapshotItem(i$1);
-		if (node instanceof HTMLElement) {
-			console.log("found node", node);
-			var keys = Object.keys(node.dataset);
-			var isTwoWayBinding = keys.some(function(key) {
-				return key.endsWith("Bind");
-			});
-			if (isTwoWayBinding) return "continue";
-			var luscentEventName = (_a = keys.filter(function(key) {
-				return key.startsWith("luscentOn");
-			})[0]) !== null && _a !== void 0 ? _a : "";
-			var eventName_1 = luscentEventName.replace("luscentOn", "").toLowerCase();
-			var methodName_1 = node.dataset[luscentEventName];
-			var boundAttributeName = "luscentOn".concat(eventName_1.charAt(0).toUpperCase() + eventName_1.slice(1), "Bound");
-			if (node.dataset[boundAttributeName] === "true") return "continue";
-			if (methodName_1 && methods[methodName_1]) {
-				node.addEventListener(eventName_1, function(event) {
-					if (eventName_1 === "submit") event.preventDefault();
-					var id = node.dataset.luscentRenderedId;
-					context.state = methods[methodName_1](context.state, event, id);
-					update_dom_default(context, getters, methods, conditions, lists);
-				});
-				node.dataset[boundAttributeName] = "true";
-			}
-		}
-	};
-	for (var i = 0; i < xpathResult.snapshotLength; i++) _loop_1(i);
-};
-var bind_events_default = bindEvents;
-
-//#endregion
 //#region src/render-for.ts
 /**
 * This method will find all [data-luscent-for] and render a template for each item in the list.
@@ -202,7 +159,6 @@ var renderFor = function(context, getters, methods, conditions, lists, element) 
 			for (var _c = 0, addedElements_1 = addedElements; _c < addedElements_1.length; _c++) {
 				var addedElement = addedElements_1[_c];
 				render_id_default(addedElement, item);
-				bind_events_default(context, getters, methods, conditions, lists, addedElement);
 				update_dom_default(context, getters, methods, conditions, lists, addedElement, item);
 			}
 		}
@@ -241,6 +197,49 @@ var renderValue = function(context, getters, element, local) {
 var render_value_default = renderValue;
 
 //#endregion
+//#region src/bind-events.ts
+/**
+* This method registers the event handler that react to DOM events.
+*
+* Each events goal is to return a new state to trigger a new UI change.
+*/
+var bindEvents = function(context, getters, methods, conditions, lists, element) {
+	var _a;
+	var target = element !== null && element !== void 0 ? element : document;
+	var xpathExpression = "//*[./@*[starts-with(name(), \"data-luscent-on-\")]]";
+	var xpathResult = document.evaluate(xpathExpression, target, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+	var _loop_1 = function(i$1) {
+		var node = xpathResult.snapshotItem(i$1);
+		if (node instanceof HTMLElement) {
+			console.log("found node", node);
+			var keys = Object.keys(node.dataset);
+			var isTwoWayBinding = keys.some(function(key) {
+				return key.endsWith("Bind");
+			});
+			if (isTwoWayBinding) return "continue";
+			var luscentEventName = (_a = keys.filter(function(key) {
+				return key.startsWith("luscentOn");
+			})[0]) !== null && _a !== void 0 ? _a : "";
+			var eventName_1 = luscentEventName.replace("luscentOn", "").toLowerCase();
+			var methodName_1 = node.dataset[luscentEventName];
+			var boundAttributeName = "luscentOn".concat(eventName_1.charAt(0).toUpperCase() + eventName_1.slice(1), "Bound");
+			if (node.dataset[boundAttributeName] === "true") return "continue";
+			if (methodName_1 && methods[methodName_1]) {
+				node.addEventListener(eventName_1, function(event) {
+					if (eventName_1 === "submit") event.preventDefault();
+					var id = node.dataset.luscentRenderedId;
+					context.state = methods[methodName_1](context.state, event, id);
+					update_dom_default(context, getters, methods, conditions, lists);
+				});
+				node.dataset[boundAttributeName] = "true";
+			}
+		}
+	};
+	for (var i = 0; i < xpathResult.snapshotLength; i++) _loop_1(i);
+};
+var bind_events_default = bindEvents;
+
+//#endregion
 //#region src/update-dom.ts
 /**
 * The function will take a state.
@@ -251,6 +250,7 @@ var updateDOM = function(context, getters, methods, conditions, lists, element, 
 	render_value_default(context, getters, element, local);
 	render_if_default(context, getters, methods, conditions, lists, element);
 	if (lists) render_for_default(context, getters, methods, conditions, lists, element);
+	bind_events_default(context, getters, methods, conditions, lists, element);
 };
 var update_dom_default = updateDOM;
 
@@ -321,7 +321,9 @@ var start = function(parameters) {
 	var lists = parameters.lists || {};
 	var context = { state };
 	update_dom_default(context, getters, methods, conditions, lists);
-	bind_events_default(context, getters, methods, conditions, lists);
+	/**
+	* @todo Do the same as bindEvents: keep track of bounded elements + move this call to updateDOM
+	*/
 	bind_two_way_default(context, getters, methods, conditions, lists);
 	console.log("Luscent app started successfully");
 };

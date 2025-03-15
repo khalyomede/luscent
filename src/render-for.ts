@@ -98,7 +98,6 @@ const renderFor = <T>(context: Context<T>, getters: Record<string, Getter<T>>, m
 
             for (const addedElement of addedElements) {
                 renderId(addedElement as HTMLElement, item);
-                bindEvents(context, getters, methods, conditions, lists, addedElement as HTMLElement);
 
                 updateDOM(context, getters, methods, conditions, lists, addedElement as HTMLElement, item);
             }
