@@ -7,6 +7,7 @@ import List from "./list";
 import renderValue from "./render-value";
 import Method from "./method";
 import bindEvents from "./bind-events";
+import renderBind from "./render-bind";
 
 /**
  * The function will take a state.
@@ -15,6 +16,8 @@ import bindEvents from "./bind-events";
  */
 const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement, local?: Record<string, any>): void => {
     renderValue(context, getters, element, local);
+
+    renderBind(context, element);
 
     renderIf(context, getters, methods, conditions, lists, element);
 
