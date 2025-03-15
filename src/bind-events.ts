@@ -28,8 +28,6 @@ const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
     for (let i = 0; i < xpathResult.snapshotLength; i++) {
         const node = xpathResult.snapshotItem(i);
         if (node instanceof HTMLElement) {
-            console.log("found node", node);
-
             const keys = Object.keys(node.dataset);
             const isTwoWayBinding = keys.some((key) => key.endsWith("Bind"));
 
@@ -61,6 +59,9 @@ const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
                     context.state = methods[methodName](context.state, event, id);
                     // Update DOM with new state
                     updateDOM(context, getters, methods, conditions, lists);
+                }, {
+                    passive: eventName !== "submit",
+                    capture: true
                 });
 
                 // Mark as bound with the specific event attribute

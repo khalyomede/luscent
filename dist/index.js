@@ -211,7 +211,6 @@ var bindEvents = function(context, getters, methods, conditions, lists, element)
 	var _loop_1 = function(i$1) {
 		var node = xpathResult.snapshotItem(i$1);
 		if (node instanceof HTMLElement) {
-			console.log("found node", node);
 			var keys = Object.keys(node.dataset);
 			var isTwoWayBinding = keys.some(function(key) {
 				return key.endsWith("Bind");
@@ -223,8 +222,12 @@ var bindEvents = function(context, getters, methods, conditions, lists, element)
 			var eventName_1 = luscentEventName.replace("luscentOn", "").toLowerCase();
 			var methodName_1 = node.dataset[luscentEventName];
 			var boundAttributeName = "luscentOn".concat(eventName_1.charAt(0).toUpperCase() + eventName_1.slice(1), "Bound");
-			if (node.dataset[boundAttributeName] === "true") return "continue";
+			if (node.dataset[boundAttributeName] === "true") {
+				console.debug("Will not bind event ".concat(eventName_1, " to element because is is already bound"), node);
+				return "continue";
+			}
 			if (methodName_1 && methods[methodName_1]) {
+				console.log("Binding event ".concat(eventName_1, " to element"), node);
 				node.addEventListener(eventName_1, function(event) {
 					if (eventName_1 === "submit") event.preventDefault();
 					var id = node.dataset.luscentRenderedId;
