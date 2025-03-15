@@ -13,37 +13,50 @@ import List from "./list";
 const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
     const target = element ?? document;
 
-    target.querySelectorAll('[data-luscent-on-click]').forEach(element => {
-        const methodName = element.getAttribute('data-luscent-on-click');
+    const xpathExpression = `//*[./@*[starts-with(name(), "data-luscent-on-")]]`;
 
-        if (methodName && methods[methodName]) {
-            element.addEventListener('click', (event) => {
-                const id = (element as HTMLElement).dataset.luscentRenderedId;
+    // Execute the XPath query
+    const xpathResult = document.evaluate(
+        xpathExpression,
+        target,
+        null,
+        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+        null
+    );
 
-                // Update state using the method
-                context.state = methods[methodName](context.state, event, id);
-                // Update DOM with new state
-                updateDOM(context, getters, methods, conditions, lists);
-            });
+    // Convert XPath result to array
+    for (let i = 0; i < xpathResult.snapshotLength; i++) {
+        const node = xpathResult.snapshotItem(i);
+        if (node instanceof HTMLElement) {
+            console.log("found node", node);
+
+            const keys = Object.keys(node.dataset);
+            const isTwoWayBinding = keys.some((key) => key.endsWith("Bind"));
+
+            if (isTwoWayBinding) {
+                continue;
+            }
+
+            const luscentEventName = (keys.filter((key) => key.startsWith("luscentOn"))[0] ?? "")
+            const eventName = luscentEventName.replace("luscentOn", "").toLowerCase();
+            const methodName = node.dataset[luscentEventName];
+
+            if (methodName && methods[methodName]) {
+                node.addEventListener(eventName, (event) => {
+                    if (eventName === "submit") {
+                        event.preventDefault();
+                    }
+
+                    const id = node.dataset.luscentRenderedId;
+
+                    // Update state using the method
+                    context.state = methods[methodName](context.state, event, id);
+                    // Update DOM with new state
+                    updateDOM(context, getters, methods, conditions, lists);
+                });
+            }
         }
-    });
-
-    target.querySelectorAll('[data-luscent-on-submit]').forEach(element => {
-        const methodName = element.getAttribute('data-luscent-on-submit');
-
-        if (methodName && methods[methodName]) {
-            element.addEventListener('submit', (event) => {
-                event.preventDefault();
-
-                const id = (element as HTMLElement).dataset.luscentRenderedId;
-
-                // Update state using the method
-                context.state = methods[methodName](context.state, event, id);
-                // Update DOM with new state
-                updateDOM(context, getters, methods, conditions, lists);
-            });
-        }
-    });
+    }
 }
 
 export default bindEvents;
