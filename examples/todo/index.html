@@ -120,14 +120,10 @@
                             )
                         };
                     },
-                    deleteTask: (state, event, id) => {
-                        console.log(`User wants to delete task id ${id}`);
-
-                        return {
-                            ...state,
-                            tasks: state.tasks.filter((task) => task.id != id)
-                        };
-                    }
+                    deleteTask: (state, event, id) => ({
+                        ...state,
+                        tasks: state.tasks.filter((task) => task.id != id)
+                    }),
                 },
                 getters: {
                     numberOfTasks: ({ tasks }) => tasks.length
