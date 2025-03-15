@@ -3,8 +3,9 @@ import Context from "./context";
 import Getter from "./getter";
 import updateDOM from "./update-dom";
 import List from "./list";
+import Method from "./method";
 
-const bindTwoWay = <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>): void => {
+const bindTwoWay = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>): void => {
     const elements = Array.from(document.querySelectorAll('[data-luscent-on-input-bind]'));
 
     for (const element of elements) {
@@ -49,7 +50,7 @@ const bindTwoWay = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
                 [key]: target.value
             };
 
-            updateDOM(context, getters, conditions, lists);
+            updateDOM(context, getters, methods, conditions, lists);
         });
     }
 };

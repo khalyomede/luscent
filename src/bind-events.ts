@@ -10,31 +10,37 @@ import List from "./list";
  *
  * Each events goal is to return a new state to trigger a new UI change.
  */
-const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>): void => {
-    document.querySelectorAll('[data-luscent-on-click]').forEach(element => {
+const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
+    const target = element ?? document;
+
+    target.querySelectorAll('[data-luscent-on-click]').forEach(element => {
         const methodName = element.getAttribute('data-luscent-on-click');
 
         if (methodName && methods[methodName]) {
             element.addEventListener('click', (event) => {
+                const id = (element as HTMLElement).dataset.luscentRenderedId;
+
                 // Update state using the method
-                context.state = methods[methodName](context.state, event);
+                context.state = methods[methodName](context.state, event, id);
                 // Update DOM with new state
-                updateDOM(context, getters, conditions, lists);
+                updateDOM(context, getters, methods, conditions, lists);
             });
         }
     });
 
-    document.querySelectorAll('[data-luscent-on-submit]').forEach(element => {
+    target.querySelectorAll('[data-luscent-on-submit]').forEach(element => {
         const methodName = element.getAttribute('data-luscent-on-submit');
 
         if (methodName && methods[methodName]) {
             element.addEventListener('submit', (event) => {
                 event.preventDefault();
 
+                const id = (element as HTMLElement).dataset.luscentRenderedId;
+
                 // Update state using the method
-                context.state = methods[methodName](context.state, event);
+                context.state = methods[methodName](context.state, event, id);
                 // Update DOM with new state
-                updateDOM(context, getters, conditions, lists);
+                updateDOM(context, getters, methods, conditions, lists);
             });
         }
     });

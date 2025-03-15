@@ -3,6 +3,9 @@ import Context from "./context";
 import Condition from "./condition";
 import Getter from "./getter";
 import updateDOM from "./update-dom";
+import renderId from "./render-id";
+import bindEvents from "./bind-events";
+import Method from "./method";
 
 /**
  * This method will find all [data-luscent-for] and render a template for each item in the list.
@@ -17,7 +20,7 @@ import updateDOM from "./update-dom";
  *    c. Sets each element's content to the corresponding property of the item
  *    d. Appends the clone to the element
  */
-const renderFor = <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
+const renderFor = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
     const target = element ?? document;
     const elements = Array.from(target.querySelectorAll('[data-luscent-for]'));
 
@@ -80,21 +83,24 @@ const renderFor = <T>(context: Context<T>, getters: Record<string, Getter<T>>, c
         for (const item of items) {
             const clone = template.content.cloneNode(true);
 
-            const uniqueId = `luscent-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            const uniqueKey = `luscent-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
             const cloneChildren = Array.from(clone.childNodes).filter((child) => child instanceof HTMLElement);
 
             for (const child of cloneChildren) {
-                child.dataset.luscentId = uniqueId;
+                child.dataset.luscentKey = uniqueKey;
             }
 
             // Append the filled-in template to the element
             element.appendChild(clone);
 
-            const addedElements = Array.from(document.querySelectorAll(`[data-luscent-id="${uniqueId}"]`));
+            const addedElements = Array.from(document.querySelectorAll(`[data-luscent-key="${uniqueKey}"]`));
 
             for (const addedElement of addedElements) {
-                updateDOM(context, getters, conditions, lists, addedElement as HTMLElement, item);
+                renderId(addedElement as HTMLElement, item);
+                bindEvents(context, getters, methods, conditions, lists, addedElement as HTMLElement);
+
+                updateDOM(context, getters, methods, conditions, lists, addedElement as HTMLElement, item);
             }
         }
     }

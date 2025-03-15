@@ -36,13 +36,9 @@ const renderValue = <T>(context: Context<T>, getters: Record<string, Getter<T>>,
             return;
         }
 
-        console.log(`Running getter ${getterName}`);
-
         const value = local
             ? local[getterName]
             : getters[getterName](context.state);
-
-        console.log("value was", value);
 
         if (item instanceof HTMLInputElement) {
             item.value = value;

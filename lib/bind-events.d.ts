@@ -8,5 +8,5 @@ import List from "./list";
  *
  * Each events goal is to return a new state to trigger a new UI change.
  */
-declare const bindEvents: <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>) => void;
+declare const bindEvents: <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement) => void;
 export default bindEvents;

@@ -24,9 +24,9 @@ const start = <T>(parameters: StartParameters<T>) => {
         state,
     };
 
-    updateDOM(context, getters, conditions, lists);
+    updateDOM(context, getters, methods, conditions, lists);
     bindEvents(context, getters, methods, conditions, lists);
-    bindTwoWay(context, getters, conditions, lists);
+    bindTwoWay(context, getters, methods, conditions, lists);
 
     console.log("Luscent app started successfully");
 }

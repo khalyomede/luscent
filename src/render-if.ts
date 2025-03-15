@@ -2,12 +2,13 @@ import Condition from "./condition";
 import Context from "./context";
 import Getter from "./getter";
 import List from "./list";
+import Method from "./method";
 import updateDOM from "./update-dom";
 
 /**
  * This method will find all [data-luscent-if] and show the element if the condition met, or hide it otherwise.
  */
-const renderIf = <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
+const renderIf = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
     const target = element ?? document;
     const elements = Array.from(target.querySelectorAll('[data-luscent-if]'));
 
@@ -87,7 +88,7 @@ const renderIf = <T>(context: Context<T>, getters: Record<string, Getter<T>>, co
             const addedElements = Array.from(document.querySelectorAll(`[data-luscent-id="${uniqueId}"]`));
 
             for (const addedElement of addedElements) {
-                updateDOM(context, getters, conditions, lists, addedElement as HTMLElement);
+                updateDOM(context, getters, methods, conditions, lists, addedElement as HTMLElement);
             }
         } else {
             element.textContent = "";

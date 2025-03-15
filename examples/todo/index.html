@@ -36,7 +36,7 @@
                         </form>
                     </div>
                 </div>
-                <div data-luscent-if="noTasks" data-luscent-template="empty-task-disclaimer"></div>
+                <div data-luscent-if="noTasks" data-luscent-template="empty-tasks-disclaimer"></div>
                 <div data-luscent-if="someTasks" data-luscent-template="tasks-list"></div>
             </div>
         </div>
@@ -53,7 +53,8 @@
         <li class="list-group-item d-flex align-items-center gap-3">
             <input class="form-check-input" type="checkbox" value="" id="firstCheckboxStretched">
             <label class="form-check-label flex-grow-1" for="firstCheckboxStretched" data-luscent-value="title"></label>
-            <button class="btn btn-sm btn-outline-danger">delete</button>
+            <button class="btn btn-sm btn-outline-danger" data-luscent-on-click="deleteTask"
+                data-luscent-id="id">delete</button>
         </li>
     </template>
 
@@ -119,6 +120,14 @@
                             )
                         };
                     },
+                    deleteTask: (state, event, id) => {
+                        console.log(`User wants to delete task id ${id}`);
+
+                        return {
+                            ...state,
+                            tasks: state.tasks.filter((task) => task.id != id)
+                        };
+                    }
                 },
                 getters: {
                     numberOfTasks: ({ tasks }) => tasks.length

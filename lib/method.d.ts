@@ -7,5 +7,5 @@
  *
  * For example, <button data-luscent-on-click="yourMethod"></button>.
  */
-type Method<T> = (state: T, event: Event) => T;
+type Method<T> = (state: T, event: Event, id?: string) => T;
 export default Method;
