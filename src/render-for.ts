@@ -1,6 +1,8 @@
 import List from "./list";
 import Context from "./context";
 import Condition from "./condition";
+import Getter from "./getter";
+import updateDOM from "./update-dom";
 
 /**
  * This method will find all [data-luscent-for] and render a template for each item in the list.
@@ -15,8 +17,9 @@ import Condition from "./condition";
  *    c. Sets each element's content to the corresponding property of the item
  *    d. Appends the clone to the element
  */
-const renderFor = <T>(context: Context<T>, lists: Record<string, List<T>>): void => {
-    const elements = Array.from(document.querySelectorAll('[data-luscent-for]'));
+const renderFor = <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
+    const target = element ?? document;
+    const elements = Array.from(target.querySelectorAll('[data-luscent-for]'));
 
     for (const element of elements) {
         if (!(element instanceof HTMLElement)) {
@@ -75,36 +78,24 @@ const renderFor = <T>(context: Context<T>, lists: Record<string, List<T>>): void
 
         // For each item, clone the template and fill in the values
         for (const item of items) {
-            const clone = template.content.cloneNode(true) as DocumentFragment;
+            const clone = template.content.cloneNode(true);
 
-            // Find all elements with data-luscent-value in the clone
-            const valueElements = Array.from(clone.querySelectorAll('[data-luscent-value]'));
+            const uniqueId = `luscent-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-            for (const valueElement of valueElements) {
-                if (!(valueElement instanceof HTMLElement)) {
-                    continue;
-                }
+            const cloneChildren = Array.from(clone.childNodes).filter((child) => child instanceof HTMLElement);
 
-                const propName = valueElement.getAttribute('data-luscent-value');
-
-                if (!propName) {
-                    continue;
-                }
-
-                // Set the element's content to the item's property value
-                if (propName in item) {
-                    const value = item[propName];
-
-                    if (valueElement instanceof HTMLInputElement) {
-                        valueElement.value = value;
-                    } else {
-                        valueElement.textContent = value;
-                    }
-                }
+            for (const child of cloneChildren) {
+                child.dataset.luscentId = uniqueId;
             }
 
             // Append the filled-in template to the element
             element.appendChild(clone);
+
+            const addedElements = Array.from(document.querySelectorAll(`[data-luscent-id="${uniqueId}"]`));
+
+            for (const addedElement of addedElements) {
+                updateDOM(context, getters, conditions, lists, addedElement as HTMLElement, item);
+            }
         }
     }
 };

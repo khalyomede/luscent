@@ -1,22 +1,20 @@
 import Context from "./context";
 import Getter from "./getter";
 
-const renderValue = <T>(context: Context<T>, getters: Record<string, Getter<T>>): void => {
-    document.querySelectorAll('[data-luscent-value]').forEach(element => {
-        // Skip elements inside templates
-        if (element.closest('template')) {
-            return;
-        }
+const renderValue = <T>(context: Context<T>, getters: Record<string, Getter<T>>, element?: HTMLElement, local?: Record<string, any>): void => {
+    const target = element ?? document;
 
+    target.querySelectorAll('[data-luscent-value]').forEach(item => {
         // Skip elements inside for loops
-        if (element.closest('[data-luscent-for]')) {
+        if (!local && item.closest('[data-luscent-for]')) {
+            console.log("skipping data-luscent-value because closest is luscent-for");
             return;
         }
 
-        const getterName = element.getAttribute('data-luscent-value');
+        const getterName = item.getAttribute('data-luscent-value');
         const getterNameIsEmpty = getterName === null || getterName.trim().length === 0;
-        const elementHasId = element.id.trim().length > 0;
-        const elementId = element.id;
+        const elementHasId = item.id.trim().length > 0;
+        const elementId = item.id;
 
         if (getterNameIsEmpty) {
             if (elementHasId) {
@@ -28,7 +26,7 @@ const renderValue = <T>(context: Context<T>, getters: Record<string, Getter<T>>)
             return;
         }
 
-        if (!getters.hasOwnProperty(getterName)) {
+        if (!local && !getters.hasOwnProperty(getterName)) {
             if (elementHasId) {
                 console.warn(`The element id "${elementId}" content with data-luscent-value="${getterName}" could not be rendered because a getter with the same name could not be found.`);
             } else {
@@ -40,14 +38,16 @@ const renderValue = <T>(context: Context<T>, getters: Record<string, Getter<T>>)
 
         console.log(`Running getter ${getterName}`);
 
-        const value = getters[getterName](context.state);
+        const value = local
+            ? local[getterName]
+            : getters[getterName](context.state);
 
         console.log("value was", value);
 
-        if (element instanceof HTMLInputElement) {
-            element.value = value;
+        if (item instanceof HTMLInputElement) {
+            item.value = value;
         } else {
-            element.textContent = value;
+            item.textContent = value;
         }
     });
 };

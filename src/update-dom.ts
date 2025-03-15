@@ -11,17 +11,17 @@ import renderValue from "./render-value";
  *
  * Then find all the one-way data binding (data-luscent-value="..."), grab the value in the state and put it on the DOM element.
  */
-const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists?: Record<string, List<T>>): void => {
+const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement, local?: Record<string, any>): void => {
     console.log("DOM will be updated with");
     console.log(context.state);
 
-    renderValue(context, getters);
+    renderValue(context, getters, element, local);
 
-    renderIf(context, conditions);
+    renderIf(context, getters, conditions, lists, element);
 
     // Render for loops if lists are provided
     if (lists) {
-        renderFor(context, lists);
+        renderFor(context, getters, conditions, lists, element);
     }
 }
 

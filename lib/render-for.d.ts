@@ -1,5 +1,7 @@
 import List from "./list";
 import Context from "./context";
+import Condition from "./condition";
+import Getter from "./getter";
 /**
  * This method will find all [data-luscent-for] and render a template for each item in the list.
  *
@@ -13,5 +15,5 @@ import Context from "./context";
  *    c. Sets each element's content to the corresponding property of the item
  *    d. Appends the clone to the element
  */
-declare const renderFor: <T>(context: Context<T>, lists: Record<string, List<T>>) => void;
+declare const renderFor: <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement) => void;
 export default renderFor;

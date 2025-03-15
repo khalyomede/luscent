@@ -1,11 +1,15 @@
 import Condition from "./condition";
 import Context from "./context";
+import Getter from "./getter";
+import List from "./list";
+import updateDOM from "./update-dom";
 
 /**
  * This method will find all [data-luscent-if] and show the element if the condition met, or hide it otherwise.
  */
-const renderIf = <T>(context: Context<T>, conditions: Record<string, Condition<T>>): void => {
-    const elements = Array.from(document.querySelectorAll('[data-luscent-if]'));
+const renderIf = <T>(context: Context<T>, getters: Record<string, Getter<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
+    const target = element ?? document;
+    const elements = Array.from(target.querySelectorAll('[data-luscent-if]'));
 
     for (const element of elements) {
         if (!(element instanceof HTMLElement)) {
@@ -66,8 +70,25 @@ const renderIf = <T>(context: Context<T>, conditions: Record<string, Condition<T
                 continue;
             }
 
+            const clone = template.content.cloneNode(true) as DocumentFragment;
+
+            const uniqueId = `luscent-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+            const cloneChildren = Array.from(clone.childNodes).filter((child) => child instanceof HTMLElement);
+
+            for (const child of cloneChildren) {
+                child.dataset.luscentId = uniqueId;
+            }
+
             element.textContent = "";
-            element.appendChild(template.content.cloneNode(true));
+
+            element.appendChild(clone);
+
+            const addedElements = Array.from(document.querySelectorAll(`[data-luscent-id="${uniqueId}"]`));
+
+            for (const addedElement of addedElements) {
+                updateDOM(context, getters, conditions, lists, addedElement as HTMLElement);
+            }
         } else {
             element.textContent = "";
         }

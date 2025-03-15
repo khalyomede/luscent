@@ -12,10 +12,10 @@ import List from "./list";
  */
 interface StartParameters<T> {
     state?: T,
-    methods?: Record<string, Method<T>>,
+    methods: Record<string, Method<T>>,
     getters: Record<string, Getter<T>>,
-    conditions?: Record<string, Condition<T>>,
-    lists?: Record<string, List<T>>,
+    conditions: Record<string, Condition<T>>,
+    lists: Record<string, List<T>>,
 }
 
 export default StartParameters;
