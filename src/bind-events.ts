@@ -41,6 +41,14 @@ const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
             const eventName = luscentEventName.replace("luscentOn", "").toLowerCase();
             const methodName = node.dataset[luscentEventName];
 
+            // Create the bound attribute name for this event
+            const boundAttributeName = `luscentOn${eventName.charAt(0).toUpperCase() + eventName.slice(1)}Bound`;
+
+            // Skip if already bound for this event
+            if (node.dataset[boundAttributeName] === "true") {
+                continue;
+            }
+
             if (methodName && methods[methodName]) {
                 node.addEventListener(eventName, (event) => {
                     if (eventName === "submit") {
@@ -54,6 +62,9 @@ const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
                     // Update DOM with new state
                     updateDOM(context, getters, methods, conditions, lists);
                 });
+
+                // Mark as bound with the specific event attribute
+                node.dataset[boundAttributeName] = "true";
             }
         }
     }
