@@ -7,7 +7,6 @@ const renderValue = <T>(context: Context<T>, getters: Record<string, Getter<T>>,
     target.querySelectorAll('[data-luscent-value]').forEach(item => {
         // Skip elements inside for loops
         if (!local && item.closest('[data-luscent-for]')) {
-            console.log("skipping data-luscent-value because closest is luscent-for");
             return;
         }
 
