@@ -312,34 +312,44 @@ var __assign = function() {
 //#endregion
 //#region src/bind-two-way.ts
 var bindTwoWay = function(context, getters, methods, conditions, lists) {
-	var elements = Array.from(document.querySelectorAll("[data-luscent-on-input-bind]"));
-	var _loop_1 = function(element$1) {
-		if (!(element$1 instanceof HTMLElement)) return "continue";
-		var elementId = element$1.id;
+	var xpathExpression = "//*[./@*[starts-with(name(), \"data-luscent-on-\") and substring(name(), string-length(name()) - 4) = \"-bind\"]]";
+	var xpathResult = document.evaluate(xpathExpression, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+	for (var i = 0; i < xpathResult.snapshotLength; i++) {
+		var element = xpathResult.snapshotItem(i);
+		if (!(element instanceof HTMLElement)) continue;
+		var elementId = element.id;
 		var elementHasId = elementId.trim().length > 0;
-		var key = element$1.dataset.luscentOnInputBind;
-		if (key === undefined) {
-			if (elementHasId) console.warn("Please specify a key when using data-luscent-on-input-bind on the element with id \"".concat(elementId, "\"."));
-			else console.warn("Please specify a key when using data-luscent-on-input-bind.");
-			return { value: void 0 };
-		}
-		if (!(element$1 instanceof HTMLInputElement)) {
-			if (elementHasId) console.warn("It seems you tried to bind a value (using data-luscent-on-input-bind=\"".concat(key, "\") on the element with id \"").concat(elementId, "\" that is not an HTMLInputElement. This won't make the data reactive."));
-			else console.warn("It seems you tried to bind a value (using data-luscent-on-input-bind=\"".concat(key, "\") on an element that is not an HTMLInputElement. This won't make the data reactive."));
-			return "continue";
-		}
-		element$1.addEventListener("input", function(event) {
-			var _a;
-			if (!(event instanceof InputEvent)) return;
-			var target = event.target;
-			context.state = __assign(__assign({}, context.state), (_a = {}, _a[key] = target.value, _a));
-			update_dom_default(context, getters, methods, conditions, lists);
+		var keys = Object.keys(element.dataset).filter(function(key$1) {
+			return key$1.startsWith("luscentOn") && key$1.endsWith("Bind");
 		});
-	};
-	for (var _i = 0, elements_1 = elements; _i < elements_1.length; _i++) {
-		var element = elements_1[_i];
-		var state_1 = _loop_1(element);
-		if (typeof state_1 === "object") return state_1.value;
+		var _loop_1 = function(key$1) {
+			var eventName = key$1.replace("luscentOn", "").replace("Bind", "").toLowerCase();
+			var stateKey = element.dataset[key$1];
+			var boundAttributeName = "luscentOn".concat(eventName.charAt(0).toUpperCase() + eventName.slice(1), "BindBound");
+			if (element.dataset[boundAttributeName] === "true") return "continue";
+			if (!stateKey) {
+				if (elementHasId) console.warn("Please specify a key when using data-luscent-on-".concat(eventName, "-bind on the element with id \"").concat(elementId, "\"."));
+				else console.warn("Please specify a key when using data-luscent-on-".concat(eventName, "-bind."));
+				return "continue";
+			}
+			if (!(element instanceof HTMLInputElement)) {
+				if (elementHasId) console.warn("It seems you tried to bind a value (using data-luscent-on-".concat(eventName, "-bind=\"").concat(stateKey, "\") on the element with id \"").concat(elementId, "\" that is not an HTMLInputElement. This won't make the data reactive."));
+				else console.warn("It seems you tried to bind a value (using data-luscent-on-".concat(eventName, "-bind=\"").concat(stateKey, "\") on an element that is not an HTMLInputElement. This won't make the data reactive."));
+				return "continue";
+			}
+			element.addEventListener(eventName, function(event) {
+				var _a;
+				if (!(event instanceof InputEvent)) return;
+				var target = event.target;
+				context.state = __assign(__assign({}, context.state), (_a = {}, _a[stateKey] = target.value, _a));
+				update_dom_default(context, getters, methods, conditions, lists);
+			});
+			element.dataset[boundAttributeName] = "true";
+		};
+		for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+			var key = keys_1[_i];
+			_loop_1(key);
+		}
 	}
 };
 var bind_two_way_default = bindTwoWay;

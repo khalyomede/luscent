@@ -6,9 +6,22 @@ import List from "./list";
 import Method from "./method";
 
 const bindTwoWay = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>): void => {
-    const elements = Array.from(document.querySelectorAll('[data-luscent-on-input-bind]'));
+    // XPath to find elements with two-way binding attributes
+    const xpathExpression = `//*[./@*[starts-with(name(), "data-luscent-on-") and substring(name(), string-length(name()) - 4) = "-bind"]]`;
 
-    for (const element of elements) {
+    // Execute the XPath query
+    const xpathResult = document.evaluate(
+        xpathExpression,
+        document,
+        null,
+        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+        null
+    );
+
+    // Process each element
+    for (let i = 0; i < xpathResult.snapshotLength; i++) {
+        const element = xpathResult.snapshotItem(i);
+
         if (!(element instanceof HTMLElement)) {
             continue;
         }
@@ -16,42 +29,61 @@ const bindTwoWay = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
         const elementId = element.id;
         const elementHasId = elementId.trim().length > 0;
 
-        const key = element.dataset.luscentOnInputBind;
+        // Get the dataset keys that match our pattern
+        const keys = Object.keys(element.dataset).filter(key =>
+            key.startsWith('luscentOn') && key.endsWith('Bind')
+        );
 
-        if (key === undefined) {
-            if (elementHasId) {
-                console.warn(`Please specify a key when using data-luscent-on-input-bind on the element with id "${elementId}".`);
-            } else {
-                console.warn(`Please specify a key when using data-luscent-on-input-bind.`);
+        for (const key of keys) {
+            // Extract the event name (e.g., "input" from "luscentOnInputBind")
+            const eventName = key.replace('luscentOn', '').replace('Bind', '').toLowerCase();
+            const stateKey = element.dataset[key];
+
+            // Create a bound attribute name for this binding
+            const boundAttributeName = `luscentOn${eventName.charAt(0).toUpperCase() + eventName.slice(1)}BindBound`;
+
+            // Skip if already bound
+            if (element.dataset[boundAttributeName] === 'true') {
+                continue;
             }
 
-            return;
+            if (!stateKey) {
+                if (elementHasId) {
+                    console.warn(`Please specify a key when using data-luscent-on-${eventName}-bind on the element with id "${elementId}".`);
+                } else {
+                    console.warn(`Please specify a key when using data-luscent-on-${eventName}-bind.`);
+                }
+                continue;
+            }
+
+            if (!(element instanceof HTMLInputElement)) {
+                if (elementHasId) {
+                    console.warn(`It seems you tried to bind a value (using data-luscent-on-${eventName}-bind="${stateKey}") on the element with id "${elementId}" that is not an HTMLInputElement. This won't make the data reactive.`);
+                } else {
+                    console.warn(`It seems you tried to bind a value (using data-luscent-on-${eventName}-bind="${stateKey}") on an element that is not an HTMLInputElement. This won't make the data reactive.`);
+                }
+                continue;
+            }
+
+            // Add the event listener
+            element.addEventListener(eventName, (event: Event): void => {
+                if (!(event instanceof InputEvent)) {
+                    return;
+                }
+
+                const target = event.target as HTMLInputElement;
+
+                context.state = {
+                    ...context.state,
+                    [stateKey]: target.value
+                };
+
+                updateDOM(context, getters, methods, conditions, lists);
+            });
+
+            // Mark as bound
+            element.dataset[boundAttributeName] = 'true';
         }
-
-        if (!(element instanceof HTMLInputElement)) {
-            if (elementHasId) {
-                console.warn(`It seems you tried to bind a value (using data-luscent-on-input-bind="${key}") on the element with id "${elementId}" that is not an HTMLInputElement. This won't make the data reactive.`);
-            } else {
-                console.warn(`It seems you tried to bind a value (using data-luscent-on-input-bind="${key}") on an element that is not an HTMLInputElement. This won't make the data reactive.`);
-            }
-
-            continue;
-        }
-
-        element.addEventListener("input", (event: Event): void => {
-            if (!(event instanceof InputEvent)) {
-                return;
-            }
-
-            const target = event.target as HTMLInputElement;
-
-            context.state = {
-                ...context.state,
-                [key]: target.value
-            };
-
-            updateDOM(context, getters, methods, conditions, lists);
-        });
     }
 };
 
