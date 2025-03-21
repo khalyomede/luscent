@@ -8,6 +8,7 @@ import renderValue from "./render-value";
 import Method from "./method";
 import bindEvents from "./bind-events";
 import renderBind from "./render-bind";
+import bindTwoWay from "./bind-two-way";
 
 /**
  * The function will take a state.
@@ -27,6 +28,8 @@ const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, m
     }
 
     bindEvents(context, getters, methods, conditions, lists, element);
+
+    bindTwoWay(context, getters, methods, conditions, lists);
 }
 
 export default updateDOM;

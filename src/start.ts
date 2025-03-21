@@ -1,7 +1,5 @@
 import StartParameters from "./start-parameters";
 import updateDOM from "./update-dom";
-import bindEvents from "./bind-events";
-import bindTwoWay from "./bind-two-way";
 import Context from "./context";
 
 /**
@@ -25,11 +23,6 @@ const start = <T>(parameters: StartParameters<T>) => {
     };
 
     updateDOM(context, getters, methods, conditions, lists);
-
-    /**
-     * @todo Do the same as bindEvents: keep track of bounded elements + move this call to updateDOM
-     */
-    bindTwoWay(context, getters, methods, conditions, lists);
 
     console.log("Luscent app started successfully");
 }
