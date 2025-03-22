@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspiration Demo - Luscent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+
+<body data-bs-theme="dark">
+    <header class="navbar bg-body-tertiary">
+        <nav class="container-fluid">
+            <div class="container">
+                <div class="row">
+                    <div class="col col-12 col-md-10 col-lg-8 col-xl-6 offset-md-1 offset-lg-2 offset-xl-3">
+                        <a class="navbar-brand" href="#">Inspiration</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="container mt-5">
+        <div class="row">
+            <div class="col col-12 col-md-10 col-lg-8 col-xl-6 offset-md-1 offset-lg-2 offset-xl-3">
+                <div class="row">
+                    <div class="col col-12">
+                        <p class="fs-2" data-luscent-value="quoteText"></p>
+                        <p class="fs-4">— <span data-luscent-value="authorName"></span></p>
+                    </div>
+                </div>
+                <div class="row mt-5">
+                    <div class="col col-12">
+                        <span data-luscent-if="isNotLoading" data-luscent-template="more-wisdom-button"></span>
+                        <span data-luscent-if="isLoading" data-luscent-template="loading-button"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <template id="more-wisdom-button">
+        <button class="btn btn-primary" data-luscent-on-click="inspire">More Wisdom</button>
+    </template>
+    <template id="loading-button">
+        <button disabled="true" class="btn btn-primary">Loading...</button>
+    </template>
+    <script src="index.js"></script>
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const { start } = window.luscent;
+
+            const app = start({
+                state: {
+                    quote: "Be the change that you wish to see in the world.",
+                    author: "Mahatma Gandhi",
+                    loading: false
+                },
+                getters: {
+                    quoteText: ({ quote }) => quote,
+                    authorName: ({ author }) => author,
+                },
+                conditions: {
+                    isLoading: ({ loading }) => loading,
+                    isNotLoading: ({ loading }) => !loading,
+                },
+                methods: {
+                    inspire: async (state) => {
+                        app.updateState({
+                            loading: true,
+                        });
+
+                        await sleep(2500);
+
+                        const response = await fetch("https://dummyjson.com/quotes/random");
+                        const json = await response.json();
+
+                        app.updateState({
+                            quote: json.quote,
+                            author: json.author,
+                            loading: false,
+                        });
+                    },
+                },
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

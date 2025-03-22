@@ -53,15 +53,15 @@
         document.addEventListener("DOMContentLoaded", () => {
             const { start } = window.luscent;
 
-            start({
+            const app = start({
                 state: {
                     value: 0,
                 },
                 methods: {
-                    increment: (state) => ({
+                    increment: (state) => app.updateState({
                         value: state.value + 1,
                     }),
-                    decrement: (state) => ({
+                    decrement: (state) => app.updateState({
                         value: state.value - 1,
                     }),
                 },

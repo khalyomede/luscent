@@ -27,7 +27,7 @@ const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, m
         renderFor(context, getters, methods, conditions, lists, element);
     }
 
-    bindEvents(context, getters, methods, conditions, lists, element);
+    bindEvents(context, methods, element);
 
     bindTwoWay(context, getters, methods, conditions, lists);
 }

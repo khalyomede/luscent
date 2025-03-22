@@ -1,4 +1,5 @@
 import StartParameters from "./start-parameters";
+import App from "./app";
 /**
  * This is the function to call to start your reactive app.
  *
@@ -8,5 +9,5 @@ import StartParameters from "./start-parameters";
  *
  * Finally it registers any event method, for them to trigger new UI changes.
  */
-declare const start: <T>(parameters: StartParameters<T>) => void;
+declare const start: <T>(parameters: StartParameters<T>) => App<T>;
 export default start;

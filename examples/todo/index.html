@@ -104,7 +104,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             const { start } = window.luscent;
 
-            start({
+            const app = start({
                 state: {
                     tasks: [
                         { id: 1, title: "Learn Luscent", completed: false },
@@ -118,25 +118,22 @@
                             return state;
                         }
 
-                        return {
-                            ...state,
+                        app.updateState({
                             tasks: [
                                 ...state.tasks,
                                 {
                                     id: Date.now(),
                                     title: state.newTaskTitle,
                                     completed: false
-                                }
+                                },
                             ],
-                            newTaskTitle: ""
-                        };
+                            newTaskTitle: "",
+                        });
                     },
-                    deleteTask: (state, event, id) => ({
-                        ...state,
+                    deleteTask: (state, event, id) => app.updateState({
                         tasks: state.tasks.filter((task) => task.id != id)
                     }),
-                    markTaskAsCompleted: (state, event, id) => ({
-                        ...state,
+                    markTaskAsCompleted: (state, event, id) => app.updateState({
                         tasks: state.tasks.map((task) => task.id == id
                             ? {
                                 ...task,
@@ -145,20 +142,15 @@
                             : task
                         )
                     }),
-                    markTaskAsIncomplete: (state, event, id) => {
-                        console.log(`marking task ${id} as incomplete`);
-
-                        return {
-                            ...state,
-                            tasks: state.tasks.map((task) => task.id == id
-                                ? {
-                                    ...task,
-                                    completed: false,
-                                }
-                                : task
-                            )
-                        };
-                    },
+                    markTaskAsIncomplete: (state, event, id) => app.updateState({
+                        tasks: state.tasks.map((task) => task.id == id
+                            ? {
+                                ...task,
+                                completed: false,
+                            }
+                            : task
+                        )
+                    }),
                 },
                 getters: {
                     numberOfTasksToComplete: ({ tasks }) => tasks.filter((task) => !task.completed).length,

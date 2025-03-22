@@ -10,7 +10,7 @@ import List from "./list";
  *
  * Each events goal is to return a new state to trigger a new UI change.
  */
-const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement): void => {
+const bindEvents = <T>(context: Context<T>, methods: Record<string, Method<T>>, element?: HTMLElement): void => {
     const target = element ?? document;
 
     const xpathExpression = `//*[./@*[starts-with(name(), "data-luscent-on-")]]`;
@@ -48,7 +48,7 @@ const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
             }
 
             if (methodName && methods[methodName]) {
-                node.addEventListener(eventName, (event) => {
+                node.addEventListener(eventName, async (event) => {
                     if (eventName === "submit") {
                         event.preventDefault();
                     }
@@ -56,9 +56,7 @@ const bindEvents = <T>(context: Context<T>, getters: Record<string, Getter<T>>, 
                     const id = node.dataset.luscentRenderedId;
 
                     // Update state using the method
-                    context.state = methods[methodName](context.state, event, id);
-                    // Update DOM with new state
-                    updateDOM(context, getters, methods, conditions, lists);
+                    await methods[methodName](context.state, event, id);
                 }, {
                     passive: eventName !== "submit",
                     capture: true
