@@ -4,28 +4,13 @@ import Getter from "./getter";
 import updateDOM from "./update-dom";
 import List from "./list";
 import Method from "./method";
+import findByXpath from "./find-by-xpath";
 
 const bindTwoWay = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>): void => {
-    // XPath to find elements with two-way binding attributes
-    const xpathExpression = `//*[./@*[starts-with(name(), "data-luscent-on-") and substring(name(), string-length(name()) - 4) = "-bind"]]`;
-
-    // Execute the XPath query
-    const xpathResult = document.evaluate(
-        xpathExpression,
-        document,
-        null,
-        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-        null
-    );
+    const elements = findByXpath(`//*[./@*[starts-with(name(), "data-luscent-on-") and substring(name(), string-length(name()) - 4) = "-bind"]]`);
 
     // Process each element
-    for (let i = 0; i < xpathResult.snapshotLength; i++) {
-        const element = xpathResult.snapshotItem(i);
-
-        if (!(element instanceof HTMLElement)) {
-            continue;
-        }
-
+    for (const element of elements) {
         const elementId = element.id;
         const elementHasId = elementId.trim().length > 0;
 

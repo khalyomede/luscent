@@ -4,6 +4,7 @@ import updateDOM from "./update-dom";
 import Context from "./context";
 import Condition from "./condition";
 import List from "./list";
+import findByXpath from "./find-by-xpath";
 
 /**
  * This method registers the event handler that react to DOM events.
@@ -13,58 +14,46 @@ import List from "./list";
 const bindEvents = <T>(context: Context<T>, methods: Record<string, Method<T>>, element?: HTMLElement): void => {
     const target = element ?? document;
 
-    const xpathExpression = `//*[./@*[starts-with(name(), "data-luscent-on-")]]`;
-
-    // Execute the XPath query
-    const xpathResult = document.evaluate(
-        xpathExpression,
-        target,
-        null,
-        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-        null
-    );
+    const nodes = findByXpath(`//*[./@*[starts-with(name(), "data-luscent-on-")]]`, target);
 
     // Convert XPath result to array
-    for (let i = 0; i < xpathResult.snapshotLength; i++) {
-        const node = xpathResult.snapshotItem(i);
-        if (node instanceof HTMLElement) {
-            const keys = Object.keys(node.dataset);
-            const isTwoWayBinding = keys.some((key) => key.endsWith("Bind"));
+    for (const node of nodes) {
+        const keys = Object.keys(node.dataset);
+        const isTwoWayBinding = keys.some((key) => key.endsWith("Bind"));
 
-            if (isTwoWayBinding) {
-                continue;
-            }
+        if (isTwoWayBinding) {
+            continue;
+        }
 
-            const luscentEventName = (keys.filter((key) => key.startsWith("luscentOn"))[0] ?? "")
-            const eventName = luscentEventName.replace("luscentOn", "").toLowerCase();
-            const methodName = node.dataset[luscentEventName];
+        const luscentEventName = (keys.filter((key) => key.startsWith("luscentOn"))[0] ?? "")
+        const eventName = luscentEventName.replace("luscentOn", "").toLowerCase();
+        const methodName = node.dataset[luscentEventName];
 
-            // Create the bound attribute name for this event
-            const boundAttributeName = `luscentOn${eventName.charAt(0).toUpperCase() + eventName.slice(1)}Bound`;
+        // Create the bound attribute name for this event
+        const boundAttributeName = `luscentOn${eventName.charAt(0).toUpperCase() + eventName.slice(1)}Bound`;
 
-            // Skip if already bound for this event
-            if (node.dataset[boundAttributeName] === "true") {
-                continue;
-            }
+        // Skip if already bound for this event
+        if (node.dataset[boundAttributeName] === "true") {
+            continue;
+        }
 
-            if (methodName && methods[methodName]) {
-                node.addEventListener(eventName, async (event) => {
-                    if (eventName === "submit") {
-                        event.preventDefault();
-                    }
+        if (methodName && methods[methodName]) {
+            node.addEventListener(eventName, async (event) => {
+                if (eventName === "submit") {
+                    event.preventDefault();
+                }
 
-                    const id = node.dataset.luscentRenderedId;
+                const id = node.dataset.luscentRenderedId;
 
-                    // Update state using the method
-                    await methods[methodName](context.state, event, id);
-                }, {
-                    passive: eventName !== "submit",
-                    capture: true
-                });
+                // Update state using the method
+                await methods[methodName](context.state, event, id);
+            }, {
+                passive: eventName !== "submit",
+                capture: true
+            });
 
-                // Mark as bound with the specific event attribute
-                node.dataset[boundAttributeName] = "true";
-            }
+            // Mark as bound with the specific event attribute
+            node.dataset[boundAttributeName] = "true";
         }
     }
 }

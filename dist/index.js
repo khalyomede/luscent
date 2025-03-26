@@ -314,6 +314,21 @@ var renderValue = function(context, getters, element, local) {
 var render_value_default = renderValue;
 
 //#endregion
+//#region src/find-by-xpath.ts
+var findByXpath = function(expression, root) {
+	if (root === void 0) root = null;
+	var elements = [];
+	var xpathResult = document.evaluate(expression, root !== null && root !== void 0 ? root : document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+	for (var index = 0; index < xpathResult.snapshotLength; index++) {
+		var node = xpathResult.snapshotItem(index);
+		if (node === null || !(node instanceof HTMLElement)) continue;
+		elements.push(node);
+	}
+	return elements;
+};
+var find_by_xpath_default = findByXpath;
+
+//#endregion
 //#region src/bind-events.ts
 /**
 * This method registers the event handler that react to DOM events.
@@ -323,48 +338,47 @@ var render_value_default = renderValue;
 var bindEvents = function(context, methods, element) {
 	var _a;
 	var target = element !== null && element !== void 0 ? element : document;
-	var xpathExpression = "//*[./@*[starts-with(name(), \"data-luscent-on-\")]]";
-	var xpathResult = document.evaluate(xpathExpression, target, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-	var _loop_1 = function(i$1) {
-		var node = xpathResult.snapshotItem(i$1);
-		if (node instanceof HTMLElement) {
-			var keys = Object.keys(node.dataset);
-			var isTwoWayBinding = keys.some(function(key) {
-				return key.endsWith("Bind");
-			});
-			if (isTwoWayBinding) return "continue";
-			var luscentEventName = (_a = keys.filter(function(key) {
-				return key.startsWith("luscentOn");
-			})[0]) !== null && _a !== void 0 ? _a : "";
-			var eventName_1 = luscentEventName.replace("luscentOn", "").toLowerCase();
-			var methodName_1 = node.dataset[luscentEventName];
-			var boundAttributeName = "luscentOn".concat(eventName_1.charAt(0).toUpperCase() + eventName_1.slice(1), "Bound");
-			if (node.dataset[boundAttributeName] === "true") return "continue";
-			if (methodName_1 && methods[methodName_1]) {
-				node.addEventListener(eventName_1, function(event) {
-					return __awaiter(void 0, void 0, void 0, function() {
-						var id;
-						return __generator(this, function(_a$1) {
-							switch (_a$1.label) {
-								case 0:
-									if (eventName_1 === "submit") event.preventDefault();
-									id = node.dataset.luscentRenderedId;
-									return [4, methods[methodName_1](context.state, event, id)];
-								case 1:
-									_a$1.sent();
-									return [2];
-							}
-						});
+	var nodes = find_by_xpath_default("//*[./@*[starts-with(name(), \"data-luscent-on-\")]]", target);
+	var _loop_1 = function(node$1) {
+		var keys = Object.keys(node$1.dataset);
+		var isTwoWayBinding = keys.some(function(key) {
+			return key.endsWith("Bind");
+		});
+		if (isTwoWayBinding) return "continue";
+		var luscentEventName = (_a = keys.filter(function(key) {
+			return key.startsWith("luscentOn");
+		})[0]) !== null && _a !== void 0 ? _a : "";
+		var eventName = luscentEventName.replace("luscentOn", "").toLowerCase();
+		var methodName = node$1.dataset[luscentEventName];
+		var boundAttributeName = "luscentOn".concat(eventName.charAt(0).toUpperCase() + eventName.slice(1), "Bound");
+		if (node$1.dataset[boundAttributeName] === "true") return "continue";
+		if (methodName && methods[methodName]) {
+			node$1.addEventListener(eventName, function(event) {
+				return __awaiter(void 0, void 0, void 0, function() {
+					var id;
+					return __generator(this, function(_a$1) {
+						switch (_a$1.label) {
+							case 0:
+								if (eventName === "submit") event.preventDefault();
+								id = node$1.dataset.luscentRenderedId;
+								return [4, methods[methodName](context.state, event, id)];
+							case 1:
+								_a$1.sent();
+								return [2];
+						}
 					});
-				}, {
-					passive: eventName_1 !== "submit",
-					capture: true
 				});
-				node.dataset[boundAttributeName] = "true";
-			}
+			}, {
+				passive: eventName !== "submit",
+				capture: true
+			});
+			node$1.dataset[boundAttributeName] = "true";
 		}
 	};
-	for (var i = 0; i < xpathResult.snapshotLength; i++) _loop_1(i);
+	for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
+		var node = nodes_1[_i];
+		_loop_1(node);
+	}
 };
 var bind_events_default = bindEvents;
 
@@ -410,11 +424,9 @@ var render_bind_default = renderBind;
 //#endregion
 //#region src/bind-two-way.ts
 var bindTwoWay = function(context, getters, methods, conditions, lists) {
-	var xpathExpression = "//*[./@*[starts-with(name(), \"data-luscent-on-\") and substring(name(), string-length(name()) - 4) = \"-bind\"]]";
-	var xpathResult = document.evaluate(xpathExpression, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-	for (var i = 0; i < xpathResult.snapshotLength; i++) {
-		var element = xpathResult.snapshotItem(i);
-		if (!(element instanceof HTMLElement)) continue;
+	var elements = find_by_xpath_default("//*[./@*[starts-with(name(), \"data-luscent-on-\") and substring(name(), string-length(name()) - 4) = \"-bind\"]]");
+	for (var _i = 0, elements_1 = elements; _i < elements_1.length; _i++) {
+		var element = elements_1[_i];
 		var elementId = element.id;
 		var elementHasId = elementId.trim().length > 0;
 		var keys = Object.keys(element.dataset).filter(function(key$1) {
@@ -436,16 +448,16 @@ var bindTwoWay = function(context, getters, methods, conditions, lists) {
 				return "continue";
 			}
 			element.addEventListener(eventName, function(event) {
-				var _a;
+				var _a$1;
 				if (!(event instanceof InputEvent)) return;
 				var target = event.target;
-				context.state = __assign(__assign({}, context.state), (_a = {}, _a[stateKey] = target.value, _a));
+				context.state = __assign(__assign({}, context.state), (_a$1 = {}, _a$1[stateKey] = target.value, _a$1));
 				update_dom_default(context, getters, methods, conditions, lists);
 			});
 			element.dataset[boundAttributeName] = "true";
 		};
-		for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-			var key = keys_1[_i];
+		for (var _a = 0, keys_1 = keys; _a < keys_1.length; _a++) {
+			var key = keys_1[_a];
 			_loop_1(key);
 		}
 	}
