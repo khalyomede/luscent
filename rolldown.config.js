@@ -51,6 +51,18 @@ export default defineConfig([
             typescript(),
         ],
     },
+    // Web browser compatible (UMD) - plain - theme switcher example
+    {
+        input: "src/index.ts",
+        output: {
+            format: "umd",
+            file: "examples/theme-switcher/index.js",
+            name: "luscent",
+        },
+        plugins: [
+            typescript(),
+        ],
+    },
     // Web browser compatible (UMD) - minified
     {
         input: "src/index.ts",

@@ -9,6 +9,7 @@ import Method from "./method";
 import bindEvents from "./bind-events";
 import renderBind from "./render-bind";
 import bindTwoWay from "./bind-two-way";
+import renderSet from "./render-set";
 
 /**
  * The function will take a state.
@@ -17,6 +18,8 @@ import bindTwoWay from "./bind-two-way";
  */
 const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, methods: Record<string, Method<T>>, conditions: Record<string, Condition<T>>, lists: Record<string, List<T>>, element?: HTMLElement, local?: Record<string, any>): void => {
     renderValue(context, getters, element, local);
+
+    renderSet(context, getters, element, local);
 
     renderBind(context, element);
 
