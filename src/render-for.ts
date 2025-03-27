@@ -73,28 +73,43 @@ const renderFor = <T>(context: Context<T>, getters: Record<string, Getter<T>>, m
             continue;
         }
 
-        // Clear the element's content
-        element.textContent = "";
-
         // Get the list of items
         const items = lists[key](context.state);
 
+        const keyName = element.dataset.luscentKey;
+
+        if (keyName === undefined) {
+            /**
+             * @todo console.warn
+             */
+            continue;
+        }
+
         // For each item, clone the template and fill in the values
         for (const item of items) {
-            const clone = template.content.cloneNode(true);
+            // We search for an HTMLElement within "element" that would have the same key as the one in "item".
+            // If this is the case, we just skip appending this element.
+            const keyValue = item[keyName];
+            const existingElement = element.querySelector(`[data-luscent-key="${keyValue}"]`);
 
-            const uniqueKey = `luscent-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            if (existingElement !== null) {
+                console.debug(`skipping rendering for element with id ${keyValue}`);
+
+                continue;
+            }
+
+            const clone = template.content.cloneNode(true);
 
             const cloneChildren = Array.from(clone.childNodes).filter((child) => child instanceof HTMLElement);
 
             for (const child of cloneChildren) {
-                child.dataset.luscentKey = uniqueKey;
+                child.dataset.luscentKey = keyValue;
             }
 
             // Append the filled-in template to the element
             element.appendChild(clone);
 
-            const addedElements = Array.from(document.querySelectorAll(`[data-luscent-key="${uniqueKey}"]`));
+            const addedElements = Array.from(document.querySelectorAll(`[data-luscent-key="${keyValue}"]`));
 
             for (const addedElement of addedElements) {
                 renderId(addedElement as HTMLElement, item);

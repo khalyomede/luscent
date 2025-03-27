@@ -261,21 +261,31 @@ var renderFor = function(context, getters, methods, conditions, lists, element) 
 			else console.warn("An element could not iterate because no template exists with id data-luscent-template=\"".concat(templateId, "\"."));
 			continue;
 		}
-		element_1.textContent = "";
 		var items = lists[key](context.state);
+		var keyName = element_1.dataset.luscentKey;
+		if (keyName === undefined)
+ /**
+		* @todo console.warn
+		*/
+		continue;
 		for (var _a = 0, items_1 = items; _a < items_1.length; _a++) {
 			var item = items_1[_a];
+			var keyValue = item[keyName];
+			var existingElement = element_1.querySelector("[data-luscent-key=\"".concat(keyValue, "\"]"));
+			if (existingElement !== null) {
+				console.debug("skipping rendering for element with id ".concat(keyValue));
+				continue;
+			}
 			var clone = template.content.cloneNode(true);
-			var uniqueKey = "luscent-".concat(Date.now(), "-").concat(Math.random().toString(36).substring(2, 9));
 			var cloneChildren = Array.from(clone.childNodes).filter(function(child$1) {
 				return child$1 instanceof HTMLElement;
 			});
 			for (var _b = 0, cloneChildren_1 = cloneChildren; _b < cloneChildren_1.length; _b++) {
 				var child = cloneChildren_1[_b];
-				child.dataset.luscentKey = uniqueKey;
+				child.dataset.luscentKey = keyValue;
 			}
 			element_1.appendChild(clone);
-			var addedElements = Array.from(document.querySelectorAll("[data-luscent-key=\"".concat(uniqueKey, "\"]")));
+			var addedElements = Array.from(document.querySelectorAll("[data-luscent-key=\"".concat(keyValue, "\"]")));
 			for (var _c = 0, addedElements_1 = addedElements; _c < addedElements_1.length; _c++) {
 				var addedElement = addedElements_1[_c];
 				render_id_default(addedElement, item);
