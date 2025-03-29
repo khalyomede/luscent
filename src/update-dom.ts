@@ -32,7 +32,7 @@ const updateDOM = <T>(context: Context<T>, getters: Record<string, Getter<T>>, m
 
     // bindEvents(context, methods, element);
 
-    bindTwoWay(context, getters, methods, conditions, lists);
+    // bindTwoWay(context, getters, methods, conditions, lists);
 }
 
 export default updateDOM;

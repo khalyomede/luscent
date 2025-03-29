@@ -7,10 +7,8 @@ import Context from "./context";
  *
  * Each events goal is to return a new state to trigger a new UI change.
  */
-const bindEvents = <T>(state: Partial<T>, context: Context<T>, methods: Record<string, Method<T>>, element?: HTMLElement): void => {
+const bindEvents = <T>(state: Partial<T>, context: Context<T>, methods: Record<string, Method<T>>, target: Document | HTMLElement): void => {
     console.debug("binding events");
-
-    const target = element ?? document;
 
     console.debug("target is", target);
 
@@ -51,7 +49,7 @@ const bindEvents = <T>(state: Partial<T>, context: Context<T>, methods: Record<s
                     event.preventDefault();
                 }
 
-                const id = node.dataset.luscentRenderedId;
+                const id = node.dataset.luscentForId;
 
                 // Update state using the method
                 await methods[methodName](context.state, event, id);

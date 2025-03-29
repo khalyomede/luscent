@@ -30,14 +30,14 @@
                             <div class="input-group mb-3">
                                 <input type="text" class="form-control" placeholder="Feed the cat, Do the dishes, ..."
                                     aria-label="Feed the cat, Do the dishes, ..." aria-describedby="button-addon2"
-                                    data-luscent-on-input-bind="newTaskTitle" />
+                                    data-luscent-bind="newTaskTitle" data-luscent-bind-on="input" />
                                 <button class="btn btn-outline-secondary" type="submit" id="button-addon2">add</button>
                             </div>
                         </form>
                     </div>
                 </div>
                 <div data-luscent-if="noTasks" data-luscent-template="empty-tasks-disclaimer"></div>
-                <div data-luscent-if="someTasks" data-luscent-template="tasks-list"></div>
+                <div data-luscent-if="someUncompletedTasks" data-luscent-template="tasks-list"></div>
                 <div data-luscent-if="someCompletedTasks" data-luscent-template="completed-tasks-list" class="mt-5">
                 </div>
             </div>
@@ -74,7 +74,7 @@
     <template id="tasks-list">
         <div class="row">
             <div class="col col-12">
-                <ul class="list-group" data-luscent-for="incompleteTasks" data-luscent-template="incomplete-tasks">
+                <ul class="list-group" data-luscent-for="incompletedTasks" data-luscent-template="incomplete-tasks">
                 </ul>
             </div>
         </div>
@@ -106,20 +106,30 @@
 
             const app = start({
                 state: {
-                    tasks: [
-                        { id: 1, title: "Learn Luscent", completed: false },
-                        { id: 2, title: "Build a todo app", completed: false }
+                    incompletedTasks: [
+                        { id: 1, title: "Learn Luscent" },
+                        { id: 2, title: "Build a todo app" }
                     ],
-                    newTaskTitle: ""
+                    completedTasks: [],
+                    newTaskTitle: "",
+                    numberOfTasksToComplete: 2,
+                    numberOfCompletedTasks: 0,
+                    someUncompletedTasks: true,
+                    someCompletedTasks: false,
+                    noTasks: false,
                 },
                 methods: {
+                    lists: {
+                        incompleteTasks: ({ tasks }) => tasks.filter(task => !task.completed),
+                        completedTasks: ({ tasks }) => tasks.filter(task => task.completed),
+                    },
                     addTask: (state) => {
                         if (!state.newTaskTitle.trim()) {
                             return state;
                         }
 
                         app.updateState({
-                            tasks: [
+                            incompletedTasks: [
                                 ...state.tasks,
                                 {
                                     id: Date.now(),
@@ -128,11 +138,19 @@
                                 },
                             ],
                             newTaskTitle: "",
+                            numberOfTasksToComplete: state.numberOfTasksToComplete + 1,
+                            noTasks: false,
+                            someTasks: true,
+                            someCompletedTasks: false,
                         });
                     },
-                    deleteTask: (state, event, id) => app.updateState({
-                        tasks: state.tasks.filter((task) => task.id != id)
-                    }),
+                    deleteTask: (state, event, id) => {
+                        // const deletedTask = state.tasks.filter(fn (task) => task.id === id);
+
+                        // app.updateState({
+                        //     tasks: updatedTasks,
+                        // });
+                    },
                     markTaskAsCompleted: (state, event, id) => app.updateState({
                         tasks: state.tasks.map((task) => task.id == id
                             ? {
@@ -151,19 +169,6 @@
                             : task
                         )
                     }),
-                },
-                getters: {
-                    numberOfTasksToComplete: ({ tasks }) => tasks.filter((task) => !task.completed).length,
-                    numberOfCompletedTasks: ({ tasks }) => tasks.filter((task) => task.completed).length,
-                },
-                conditions: {
-                    noTasks: ({ tasks }) => tasks.length === 0,
-                    someTasks: ({ tasks }) => tasks.filter((task) => !task.completed).length > 0,
-                    someCompletedTasks: ({ tasks }) => tasks.filter((task) => task.completed).length > 0,
-                },
-                lists: {
-                    incompleteTasks: ({ tasks }) => tasks.filter(task => !task.completed),
-                    completedTasks: ({ tasks }) => tasks.filter(task => task.completed),
                 },
             });
         });

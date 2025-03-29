@@ -1,4 +1,4 @@
 import Difference from "./difference";
-import DomUpdate from "./dom-update";
-declare const computeDomUpdates: (difference: Difference) => Array<DomUpdate>;
+import Updates from "./updates";
+declare const computeDomUpdates: (difference: Difference, root?: Document | HTMLElement) => Updates;
 export default computeDomUpdates;

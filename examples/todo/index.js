@@ -146,10 +146,9 @@ var find_by_xpath_default = findByXpath;
 *
 * Each events goal is to return a new state to trigger a new UI change.
 */
-var bindEvents = function(state, context, methods, element) {
+var bindEvents = function(state, context, methods, target) {
 	var _a;
 	console.debug("binding events");
-	var target = element !== null && element !== void 0 ? element : document;
 	console.debug("target is", target);
 	var nodes = find_by_xpath_default("//*[./@*[starts-with(name(), \"data-luscent-on-\")]]", target);
 	var _loop_1 = function(node$1) {
@@ -179,7 +178,7 @@ var bindEvents = function(state, context, methods, element) {
 						switch (_a$1.label) {
 							case 0:
 								if (eventName === "submit") event.preventDefault();
-								id = node$1.dataset.luscentRenderedId;
+								id = node$1.dataset.luscentForId;
 								return [4, methods[methodName](context.state, event, id)];
 							case 1:
 								_a$1.sent();
@@ -202,44 +201,137 @@ var bindEvents = function(state, context, methods, element) {
 var bind_events_default = bindEvents;
 
 //#endregion
+//#region src/bind-two-way.ts
+var bindTwoWay = function(newState, context, methods, target) {
+	var _loop_1 = function(key$1) {
+		var element = target.querySelector("[data-luscent-bind=".concat(key$1, "]"));
+		if (!(element instanceof HTMLElement)) return "continue";
+		var eventName = element.dataset.luscentBindOn;
+		if (eventName === undefined) return "continue";
+		if (!(element instanceof HTMLInputElement)) return "continue";
+		var boundEvent = element.dataset.luscentBound;
+		if (boundEvent !== undefined) return "continue";
+		element.addEventListener(eventName, function(event) {
+			return __awaiter(void 0, void 0, void 0, function() {
+				var value, updatedState;
+				var _a;
+				return __generator(this, function(_b) {
+					switch (_b.label) {
+						case 0:
+							if (!(event.target instanceof HTMLInputElement)) return [2];
+							value = event.target.value;
+							updatedState = (_a = {}, _a[key$1] = value, _a);
+							return [4, update_dom_two_default(context, context.state, updatedState, methods, [document])];
+						case 1:
+							_b.sent();
+							return [2];
+					}
+				});
+			});
+		});
+		element.dataset.luscentBound = String(true);
+	};
+	for (var key in newState) _loop_1(key);
+};
+var bind_two_way_default = bindTwoWay;
+
+//#endregion
 //#region src/compute-dom-updates.ts
-var computeDomUpdates = function(difference) {
+var getTemplate = function(id, cache) {
+	if (cache.has(id)) {
+		console.debug("template cache hit", id);
+		return cache.get(id);
+	}
+	var template = document.querySelector("[data-luscent-template=".concat(id, "]"));
+	if (template instanceof HTMLTemplateElement) {
+		cache.set(id, template);
+		return template;
+	}
+	return undefined;
+};
+var computeDomUpdates = function(difference, root) {
+	if (root === void 0) root = document;
 	var addedOrUpdated = __assign(__assign({}, difference.added), difference.updated);
+	var updates = {
+		domUpdates: [],
+		elementsToRender: []
+	};
 	var domUpdates = [];
+	var cachedTemplates = new Map();
 	var _loop_1 = function(key$1) {
 		console.debug("Computing state key", key$1);
 		var value = addedOrUpdated[key$1];
-		var elementForValue = document.querySelector("[data-luscent-value=".concat(key$1, "]"));
-		if (elementForValue instanceof HTMLElement) domUpdates.push(function() {
+		var elementForValue = root.querySelector("[data-luscent-value=".concat(key$1, "]"));
+		if (elementForValue instanceof HTMLElement) updates.domUpdates.push(function() {
 			return elementForValue.textContent = value;
 		});
-		var elementToSetAttributeTo = document.querySelector("[data-luscent-with=".concat(key$1, "]"));
+		var elementToSetAttributeTo = root.querySelector("[data-luscent-with=".concat(key$1, "]"));
 		if (elementToSetAttributeTo instanceof HTMLElement) {
 			var attributeName_1 = elementToSetAttributeTo.dataset.luscentAttribute;
-			if (attributeName_1 !== undefined) domUpdates.push(function() {
+			if (attributeName_1 !== undefined) updates.domUpdates.push(function() {
 				return elementToSetAttributeTo.setAttribute(attributeName_1, value);
 			});
 		}
-		var element = document.querySelector("[data-luscent-if=".concat(key$1, "]"));
+		var element = root.querySelector("[data-luscent-if=".concat(key$1, "]"));
 		console.debug("Trying to find element with [data-luscent-if=".concat(key$1, "]"), element);
 		if (element instanceof HTMLElement) {
 			console.debug("Found data-luscent-if element");
 			var templateId = element.dataset.luscentTemplate;
 			if (templateId !== undefined) {
-				var template_1 = document.getElementById(templateId);
+				var template_1 = root.querySelector("#".concat(templateId));
 				if (template_1 instanceof HTMLTemplateElement) {
-					domUpdates.push(function() {
+					updates.domUpdates.push(function() {
 						return element.textContent = "";
 					});
-					if (value) domUpdates.push(function() {
-						return element.appendChild(template_1.content.cloneNode(true));
-					});
+					if (value) {
+						updates.domUpdates.push(function() {
+							return element.appendChild(template_1.content.cloneNode(true));
+						});
+						updates.elementsToRender.push(element);
+					}
 				}
 			}
 		}
+		if (Array.isArray(value)) {
+			var elementLooped_1 = root.querySelector("[data-luscent-for=".concat(key$1, "]"));
+			if (elementLooped_1 instanceof HTMLElement) {
+				var templateId = elementLooped_1.dataset.luscentTemplate;
+				if (templateId !== undefined) {
+					var template = getTemplate(templateId, cachedTemplates);
+					if (template !== undefined) {
+						var idName = elementLooped_1.dataset.luscentKey;
+						if (idName !== undefined) {
+							var lastAddedElement_1 = null;
+							console.debug("Iterating on values for data-luscent-for=".concat(key$1), value);
+							var _loop_2 = function(item$1) {
+								if (typeof item$1 === "object") {
+									var id = item$1[idName];
+									var itemElement = root.querySelector("[data-luscent-rendered-for-key=".concat(key$1, ".").concat(idName, "][data-luscent-rendered-for-id=").concat(id, "]"));
+									if (itemElement instanceof HTMLElement) lastAddedElement_1 = itemElement;
+									else {
+										var content_1 = template.content.cloneNode(true);
+										updates.domUpdates.push(lastAddedElement_1 !== null ? function() {
+											return lastAddedElement_1 === null || lastAddedElement_1 === void 0 ? void 0 : lastAddedElement_1.after(content_1);
+										} : function() {
+											return elementLooped_1.append(content_1);
+										});
+										updates.elementsToRender.push(elementLooped_1);
+									}
+								}
+							};
+							for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
+								var item = value_1[_i];
+								_loop_2(item);
+							}
+						}
+					}
+				}
+			}
+			cachedTemplates = new Map();
+		}
 	};
 	for (var key in addedOrUpdated) _loop_1(key);
-	return domUpdates;
+	return updates;
 };
 var compute_dom_updates_default = computeDomUpdates;
 
@@ -287,26 +379,42 @@ var performDomUpdates = function(domUpdates) {
 var perform_dom_updates_default = performDomUpdates;
 
 //#endregion
-//#region src/updateDomTwo.ts
-var updateDomTwo = function(context, state, newState, methods) {
-	return __awaiter(void 0, void 0, void 0, function() {
-		var difference, domUpdates;
-		return __generator(this, function(_a) {
-			switch (_a.label) {
+//#region src/update-dom-two.ts
+var updateDomTwo = function(context, state, newState, methods, elements) {
+	return __awaiter(void 0, void 0, Promise, function() {
+		var difference, computedDomUpdates, newElementsToRender, _i, elements_1, element, _a, domUpdates, elementsToRender, _b, elements_2, element;
+		return __generator(this, function(_c) {
+			switch (_c.label) {
 				case 0:
 					difference = object_difference_default(state, newState);
 					console.log("diff", difference);
-					domUpdates = compute_dom_updates_default(difference);
-					return [4, perform_dom_updates_default(domUpdates)];
+					computedDomUpdates = [];
+					newElementsToRender = [];
+					for (_i = 0, elements_1 = elements; _i < elements_1.length; _i++) {
+						element = elements_1[_i];
+						_a = compute_dom_updates_default(difference, element), domUpdates = _a.domUpdates, elementsToRender = _a.elementsToRender;
+						computedDomUpdates.push.apply(computedDomUpdates, domUpdates);
+						newElementsToRender.push.apply(newElementsToRender, elementsToRender);
+					}
+					return [4, perform_dom_updates_default(computedDomUpdates)];
 				case 1:
-					_a.sent();
-					bind_events_default(newState, context, methods);
-					return [2];
+					_c.sent();
+					for (_b = 0, elements_2 = elements; _b < elements_2.length; _b++) {
+						element = elements_2[_b];
+						bind_events_default(newState, context, methods, element);
+						bind_two_way_default(newState, context, methods, element);
+					}
+					if (!(newElementsToRender.length > 0)) return [3, 3];
+					return [4, updateDomTwo(context, state, newState, methods, newElementsToRender)];
+				case 2:
+					_c.sent();
+					_c.label = 3;
+				case 3: return [2];
 			}
 		});
 	});
 };
-var updateDomTwo_default = updateDomTwo;
+var update_dom_two_default = updateDomTwo;
 
 //#endregion
 //#region src/start.ts
@@ -326,13 +434,13 @@ var start = function(parameters) {
 	var conditions = parameters.conditions || {};
 	var lists = parameters.lists || {};
 	var context = { state };
-	updateDomTwo_default(context, {}, context.state, methods);
+	update_dom_two_default(context, {}, context.state, methods, [document]);
 	console.log("Luscent app started successfully");
 	return { updateState: function(state$1) {
 		return __awaiter(void 0, void 0, void 0, function() {
 			return __generator(this, function(_a) {
 				switch (_a.label) {
-					case 0: return [4, updateDomTwo_default(context, context.state, state$1, methods)];
+					case 0: return [4, update_dom_two_default(context, context.state, state$1, methods, [document])];
 					case 1:
 						_a.sent();
 						context.state = __assign(__assign({}, context.state), state$1);

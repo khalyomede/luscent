@@ -2,7 +2,7 @@ import StartParameters from "./start-parameters";
 import updateDOM from "./update-dom";
 import Context from "./context";
 import App from "./app";
-import updateDomTwo from "./updateDomTwo";
+import updateDomTwo from "./update-dom-two";
 import objectDifference from "./object-difference";
 
 /**
@@ -26,13 +26,13 @@ const start = <T>(parameters: StartParameters<T>): App<T> => {
     };
 
     // updateDOM(context, getters, methods, conditions, lists);
-    updateDomTwo(context, {}, context.state, methods);
+    updateDomTwo(context, {}, context.state, methods, [document]);
 
     console.log("Luscent app started successfully");
 
     return {
         updateState: async (state: Partial<T>) => {
-            await updateDomTwo(context, context.state, state, methods);
+            await updateDomTwo(context, context.state, state, methods, [document]);
 
             context.state = {
                 ...context.state,
