@@ -2,6 +2,8 @@ import StartParameters from "./start-parameters";
 import updateDOM from "./update-dom";
 import Context from "./context";
 import App from "./app";
+import updateDomTwo from "./updateDomTwo";
+import objectDifference from "./object-difference";
 
 /**
  * This is the function to call to start your reactive app.
@@ -23,18 +25,21 @@ const start = <T>(parameters: StartParameters<T>): App<T> => {
         state,
     };
 
-    updateDOM(context, getters, methods, conditions, lists);
+    // updateDOM(context, getters, methods, conditions, lists);
+    updateDomTwo(context, {}, context.state, methods);
 
     console.log("Luscent app started successfully");
 
     return {
-        updateState: (state: Partial<T>) => {
+        updateState: async (state: Partial<T>) => {
+            await updateDomTwo(context, context.state, state, methods);
+
             context.state = {
                 ...context.state,
                 ...state,
             };
 
-            updateDOM(context, getters, methods, conditions, lists);
+            // updateDOM(context, getters, methods, conditions, lists, diff, undefined, undefined);
         }
     };
 }

@@ -55,18 +55,15 @@
 
             const app = start({
                 state: {
-                    value: 0,
+                    score: 0,
                 },
                 methods: {
                     increment: (state) => app.updateState({
-                        value: state.value + 1,
+                        score: state.score + 1,
                     }),
                     decrement: (state) => app.updateState({
-                        value: state.value - 1,
+                        score: state.score - 1,
                     }),
-                },
-                getters: {
-                    score: ({ value }) => value,
                 },
             });
         });

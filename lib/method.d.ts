@@ -7,5 +7,5 @@
  *
  * For example, <button data-luscent-on-click="yourMethod"></button>.
  */
-type Method<T> = (state: T, event: Event, id?: string) => Promise<void>;
+type Method<T> = (state: Partial<T>, event: Event, id?: string) => Promise<void>;
 export default Method;

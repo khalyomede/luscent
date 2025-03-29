@@ -1,23 +1,25 @@
-import Getter from "./getter";
 import Method from "./method";
-import updateDOM from "./update-dom";
-import Context from "./context";
-import Condition from "./condition";
-import List from "./list";
 import findByXpath from "./find-by-xpath";
+import Context from "./context";
 
 /**
  * This method registers the event handler that react to DOM events.
  *
  * Each events goal is to return a new state to trigger a new UI change.
  */
-const bindEvents = <T>(context: Context<T>, methods: Record<string, Method<T>>, element?: HTMLElement): void => {
+const bindEvents = <T>(state: Partial<T>, context: Context<T>, methods: Record<string, Method<T>>, element?: HTMLElement): void => {
+    console.debug("binding events");
+
     const target = element ?? document;
+
+    console.debug("target is", target);
 
     const nodes = findByXpath(`//*[./@*[starts-with(name(), "data-luscent-on-")]]`, target);
 
     // Convert XPath result to array
     for (const node of nodes) {
+        console.debug("Found element matching data-luscent-on", node);
+
         const keys = Object.keys(node.dataset);
         const isTwoWayBinding = keys.some((key) => key.endsWith("Bind"));
 
@@ -38,6 +40,12 @@ const bindEvents = <T>(context: Context<T>, methods: Record<string, Method<T>>, 
         }
 
         if (methodName && methods[methodName]) {
+            console.log("binding event to element", {
+                eventName,
+                methodName,
+                node,
+            });
+
             node.addEventListener(eventName, async (event) => {
                 if (eventName === "submit") {
                     event.preventDefault();

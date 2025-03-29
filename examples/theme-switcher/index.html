@@ -12,7 +12,7 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 
-<body data-luscent-set-data-bs-theme="bsTheme" data-bs-theme="dark">
+<body data-luscent-attribute="data-bs-theme" data-luscent-with="bsTheme" data-bs-theme="dark">
     <header class="navbar bg-body-tertiary">
         <nav class="container-fluid">
             <div class="container">
@@ -55,24 +55,27 @@
 
             const app = start({
                 state: {
-                    theme: "dark",
+                    light: false,
+                    dark: true,
+                    disclaimer: "You are currently using the dark theme.",
+                    class: "alert alert-light",
+                    bsTheme: "dark",
                 },
                 methods: {
                     switchToLight: () => app.updateState({
-                        theme: "light",
+                        light: true,
+                        dark: false,
+                        disclaimer: "You are currently using the light theme.",
+                        class: "alert alert-dark",
+                        bsTheme: "light",
                     }),
                     switchToDark: () => app.updateState({
-                        theme: "dark",
+                        light: false,
+                        dark: true,
+                        disclaimer: "You are currently using the dark theme.",
+                        class: "alert alert-light",
+                        bsTheme: "dark",
                     })
-                },
-                conditions: {
-                    light: ({ theme }) => theme === "light",
-                    dark: ({ theme }) => theme === "dark",
-                },
-                getters: {
-                    disclaimer: ({ theme }) => `You are currently using the ${theme} theme.`,
-                    class: ({ theme }) => theme === "light" ? "alert alert-dark" : "alert alert-light",
-                    bsTheme: ({ theme }) => theme,
                 },
             });
         });
