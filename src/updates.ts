@@ -1,8 +1,8 @@
 import DomUpdate from "./dom-update";
 
-interface Updates {
+interface Updates<T> {
     domUpdates: Array<DomUpdate>,
-    elementsToRender: Array<HTMLElement>,
+    elementsToRender: Map<HTMLElement, Partial<T>>,
 };
 
 export default Updates;

@@ -27,6 +27,8 @@ const bindTwoWay = <T>(newState: Partial<T>, context: Context<T>, methods: Recor
         }
 
         element.addEventListener(eventName, async (event) => {
+            console.log("two way triggering...");
+
             if (!(event.target instanceof HTMLInputElement)) {
                 return;
             }

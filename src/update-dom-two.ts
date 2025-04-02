@@ -8,19 +8,22 @@ import Method from "./method";
 import objectDifference from "./object-difference";
 import performDomUpdates from "./perform-dom-updates";
 
-const updateDomTwo = async <T>(context: Context<T>, state: Partial<T>, newState: Partial<T>, methods: Record<string, Method<T>>, elements: Array<Document | HTMLElement>): Promise<void> => {
+const updateDomTwo = async <T>(context: Context<T>, state: Partial<T>, newState: Partial<T>, methods: Record<string, Method<T>>, elements: Array<Document | HTMLElement>, persistState: boolean = true): Promise<void> => {
+    console.log("----- rendering start", elements);
+
     const difference: Difference = objectDifference(state as Object, newState);
 
     console.log("diff", difference);
 
     let computedDomUpdates: Array<DomUpdate> = [];
-    let newElementsToRender: Array<HTMLElement> = [];
+    let newElementsToRender: Map<HTMLElement, Partial<T>> = new Map();
 
     for (const element of elements) {
         const { domUpdates, elementsToRender } = computeDomUpdates(difference, element);
 
         computedDomUpdates.push(...domUpdates);
-        newElementsToRender.push(...elementsToRender);
+
+        elementsToRender.forEach((partialState, element) => newElementsToRender.set(element, partialState));
     }
 
     await performDomUpdates(computedDomUpdates);
@@ -30,8 +33,23 @@ const updateDomTwo = async <T>(context: Context<T>, state: Partial<T>, newState:
         bindTwoWay(newState, context, methods, element);
     }
 
-    if (newElementsToRender.length > 0) {
-        await updateDomTwo(context, state, newState, methods, newElementsToRender);
+    if (newElementsToRender.size > 0) {
+        console.debug("new elements to render");
+
+        newElementsToRender.forEach((_, element) => console.debug(element));
+
+        let updates: Array<Promise<void>> = [];
+
+        newElementsToRender.forEach((partialState, element) => updates.push(updateDomTwo(context, {}, partialState, methods, [element])))
+
+        await Promise.all(updates);
+    }
+
+    if (persistState) {
+        context.state = {
+            ...context.state,
+            ...newState,
+        };
     }
 };
 

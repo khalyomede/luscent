@@ -34,11 +34,6 @@ const start = <T>(parameters: StartParameters<T>): App<T> => {
         updateState: async (state: Partial<T>) => {
             await updateDomTwo(context, context.state, state, methods, [document]);
 
-            context.state = {
-                ...context.state,
-                ...state,
-            };
-
             // updateDOM(context, getters, methods, conditions, lists, diff, undefined, undefined);
         }
     };

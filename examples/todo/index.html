@@ -26,7 +26,8 @@
             <div class="col col-12 col-md-10 col-lg-8 col-xl-6 offset-md-1 offset-lg-2 offset-xl-3">
                 <div class="row">
                     <div class="col col-12">
-                        <form data-luscent-on-submit="addTask">
+                        <form data-luscent-on="submit" data-luscent-trigger="addTask"
+                            data-luscent-prevent-default="true">
                             <div class="input-group mb-3">
                                 <input type="text" class="form-control" placeholder="Feed the cat, Do the dishes, ..."
                                     aria-label="Feed the cat, Do the dishes, ..." aria-describedby="button-addon2"
@@ -54,7 +55,7 @@
     <template id="incomplete-tasks">
         <li class="list-group-item d-flex align-items-center gap-3">
             <input class="form-check-input" type="checkbox" value="" id="firstCheckboxStretched"
-                data-luscent-on-change="markTaskAsCompleted" data-luscent-id="id">
+                data-luscent-on="change" data-luscent-trigger="markTaskAsCompleted" data-luscent-id="id">
             <label class="form-check-label flex-grow-1" for="firstCheckboxStretched" data-luscent-value="title"></label>
             <button class="btn btn-sm btn-outline-danger" data-luscent-on-click="deleteTask"
                 data-luscent-id="id">delete</button>
@@ -74,7 +75,8 @@
     <template id="tasks-list">
         <div class="row">
             <div class="col col-12">
-                <ul class="list-group" data-luscent-for="incompletedTasks" data-luscent-template="incomplete-tasks">
+                <ul class="list-group" data-luscent-for="incompletedTasks" data-luscent-key="id"
+                    data-luscent-template="incomplete-tasks">
                 </ul>
             </div>
         </div>
@@ -123,16 +125,17 @@
                         incompleteTasks: ({ tasks }) => tasks.filter(task => !task.completed),
                         completedTasks: ({ tasks }) => tasks.filter(task => task.completed),
                     },
-                    addTask: (state) => {
+                    addTask: async (state) => {
+                        console.log("adding task...");
                         if (!state.newTaskTitle.trim()) {
                             return state;
                         }
 
-                        app.updateState({
+                        await app.updateState({
                             incompletedTasks: [
-                                ...state.tasks,
+                                ...state.incompletedTasks,
                                 {
-                                    id: Date.now(),
+                                    id: Math.max(state.incompletedTasks.map((incompletedTask) => incompletedTask.id)) + 1,
                                     title: state.newTaskTitle,
                                     completed: false
                                 },
@@ -151,15 +154,20 @@
                         //     tasks: updatedTasks,
                         // });
                     },
-                    markTaskAsCompleted: (state, event, id) => app.updateState({
-                        tasks: state.tasks.map((task) => task.id == id
-                            ? {
-                                ...task,
-                                completed: true,
-                            }
-                            : task
-                        )
-                    }),
+                    markTaskAsCompleted: async (state, event, id) => {
+                        console.debug("state", state);
+                        console.debug("marking as complete id", id);
+
+                        const task = state.incompletedTasks.filter((task) => task.id === id)[0];
+
+                        await app.updateState({
+                            incompletedTasks: state.incompletedTasks.filter((task) => task.id !== id),
+                            completedTasks: [
+                                ...state.completedTasks,
+                                task,
+                            ],
+                        });
+                    },
                     markTaskAsIncomplete: (state, event, id) => app.updateState({
                         tasks: state.tasks.map((task) => task.id == id
                             ? {
