@@ -28,11 +28,6 @@ const updateDomTwo = async <T>(context: Context<T>, state: Partial<T>, newState:
 
     await performDomUpdates(computedDomUpdates);
 
-    for (const element of elements) {
-        bindEvents(newState, context, methods, element);
-        bindTwoWay(newState, context, methods, element);
-    }
-
     if (newElementsToRender.size > 0) {
         console.debug("new elements to render");
 
@@ -43,6 +38,11 @@ const updateDomTwo = async <T>(context: Context<T>, state: Partial<T>, newState:
         newElementsToRender.forEach((partialState, element) => updates.push(updateDomTwo(context, {}, partialState, methods, [element])))
 
         await Promise.all(updates);
+    }
+
+    for (const element of elements) {
+        bindEvents(newState, context, methods, element);
+        bindTwoWay(newState, context, methods, element);
     }
 
     if (persistState) {

@@ -17,9 +17,7 @@ import objectDifference from "./object-difference";
 const start = <T>(parameters: StartParameters<T>): App<T> => {
     var state = parameters.state || {} as T;
     const methods = parameters.methods || {};
-    const getters = parameters.getters || {};
-    const conditions = parameters.conditions || {};
-    const lists = parameters.lists || {};
+    const onStateChanged = parameters.onStateChanged;
 
     const context: Context<T> = {
         state,
@@ -32,7 +30,18 @@ const start = <T>(parameters: StartParameters<T>): App<T> => {
 
     return {
         updateState: async (state: Partial<T>) => {
-            await updateDomTwo(context, context.state, state, methods, [document]);
+            const changedState = onStateChanged({
+                ...context.state,
+                ...state
+            });
+
+            const newState = {
+                ...context.state,
+                ...state,
+                ...changedState,
+            };
+
+            await updateDomTwo(context, context.state, newState, methods, [document]);
 
             // updateDOM(context, getters, methods, conditions, lists, diff, undefined, undefined);
         }

@@ -64,10 +64,10 @@
 
     <template id="completed-tasks">
         <li class="list-group-item d-flex align-items-center gap-3">
-            <input class="form-check-input" type="checkbox" checked data-luscent-on-change="markTaskAsIncomplete"
-                data-luscent-id="id">
+            <input class="form-check-input" type="checkbox" checked data-luscent-on="change"
+                data-luscent-trigger="markTaskAsIncomplete" data-luscent-id="id">
             <label class="form-check-label flex-grow-1 text-decoration-line-through" data-luscent-value="title"></label>
-            <button class="btn btn-sm btn-outline-danger" data-luscent-on-click="deleteTask"
+            <button class="btn btn-sm btn-outline-danger" data-luscent-on="click" data-luscent-trigger="deleteTask"
                 data-luscent-id="id">delete</button>
         </li>
     </template>
@@ -120,6 +120,13 @@
                     someCompletedTasks: false,
                     noTasks: false,
                 },
+                onStateChanged: (state) => ({
+                    noTasks: state.incompletedTasks.length === 0 && state.completedTasks.length === 0,
+                    someCompletedTasks: state.completedTasks.length > 0,
+                    someUncompletedTasks: state.incompletedTasks.length > 0,
+                    numberOfTasksToComplete: state.incompletedTasks.length,
+                    numberOfCompletedTasks: state.completedTasks.length,
+                }),
                 methods: {
                     lists: {
                         incompleteTasks: ({ tasks }) => tasks.filter(task => !task.completed),
@@ -135,16 +142,14 @@
                             incompletedTasks: [
                                 ...state.incompletedTasks,
                                 {
-                                    id: Math.max(state.incompletedTasks.map((incompletedTask) => incompletedTask.id)) + 1,
+                                    id: state.incompletedTasks.length === 0
+                                        ? 1
+                                        : Math.max(...state.incompletedTasks.map((incompletedTask) => incompletedTask.id)) + 1,
                                     title: state.newTaskTitle,
                                     completed: false
                                 },
                             ],
                             newTaskTitle: "",
-                            numberOfTasksToComplete: state.numberOfTasksToComplete + 1,
-                            noTasks: false,
-                            someTasks: true,
-                            someCompletedTasks: false,
                         });
                     },
                     deleteTask: (state, event, id) => {
@@ -158,10 +163,10 @@
                         console.debug("state", state);
                         console.debug("marking as complete id", id);
 
-                        const task = state.incompletedTasks.filter((task) => task.id === id)[0];
+                        const task = state.incompletedTasks.filter((task) => task.id == id)[0];
 
                         await app.updateState({
-                            incompletedTasks: state.incompletedTasks.filter((task) => task.id !== id),
+                            incompletedTasks: state.incompletedTasks.filter((task) => task.id != id),
                             completedTasks: [
                                 ...state.completedTasks,
                                 task,
