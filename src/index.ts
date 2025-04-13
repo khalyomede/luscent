@@ -81,7 +81,10 @@ function renderAttributes<T extends State>(context: Context<T>, attributes: Reco
         // Get the attribute value
         let value: string | boolean | number | undefined | null;
 
-        if (attributes[withKey]) {
+        if (localData && withKey in localData) {
+            value = localData[withKey];
+        }
+        else if (attributes[withKey]) {
             // Use the attribute getter function
             value = attributes[withKey](context.state);
         } else if (withKey in context.state) {
