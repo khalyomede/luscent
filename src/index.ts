@@ -3,7 +3,7 @@ type State = Record<string, any>;
 type Method<T> = (state: T, event?: Event, id?: string) => Promise<void>;
 type Getter<T> = (state: T) => any;
 type Condition<T> = (state: T) => boolean;
-type List<T> = (state: T) => Array<Record<string, any>>;
+type List<T> = (state: T) => Array<Partial<T>>;
 type AttributeGetter<T> = (state: T) => string | boolean | number | undefined | null;
 
 interface Context<T> {
@@ -69,7 +69,7 @@ async function renderValue<T extends State>(context: Context<T>, getters: Record
     }
 }
 
-function renderAttributes<T extends State>(context: Context<T>, attributes: Record<string, AttributeGetter<T>>, root: ParentNode = document): void {
+function renderAttributes<T extends State>(context: Context<T>, attributes: Record<string, AttributeGetter<T>>, root: ParentNode = document, localData?: Partial<T>): void {
     const elements = findElementsByAttribute('data-luscent-attach', root);
 
     for (const element of elements) {
@@ -192,6 +192,8 @@ async function renderFor<T extends State>(
             if (addedElement && addedElement instanceof HTMLElement) {
                 // Render values specific to this item
                 await renderValue(context, getters, addedElement, item);
+
+                await renderAttributes(context, attributes, addedElement, item);
 
                 // Set attributes for this item if needed
                 // Here we could add special handling for item-specific attributes

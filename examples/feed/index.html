@@ -39,7 +39,8 @@
         <div class="col col-12 mb-4">
             <div class="card">
                 <div class="card-header d-flex align-items-center gap-3">
-                    <img src="https://randomuser.me/api/portraits/women/12.jpg" class="rounded-circle" width="36"
+                    <img data-luscent-attach="src" data-luscent-with="photo"
+                        src="https://randomuser.me/api/portraits/women/12.jpg" class="rounded-circle" width="36"
                         height="36" />
                     <small class="flex-grow-1 text-secondary" data-luscent-value="author"></small>
                     <small class="text-secondary">11 minutes ago</small>
@@ -99,12 +100,15 @@
                 const response = await fetch(`https://dummyjson.com/users/${post.userId}`);
                 const user = await response.json();
 
+                const kind = user.gender === "female" ? "women" : "men";
+
                 return {
                     id: post.id,
                     content: post.body,
                     likes: post.reactions.likes,
                     views: post.views,
                     author: user.firstName + ' ' + user.lastName,
+                    photo: `https://randomuser.me/api/portraits/${kind}/${post.userId}.jpg`,
                 };
             }));
         };

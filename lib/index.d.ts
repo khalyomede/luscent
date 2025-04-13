@@ -2,7 +2,7 @@ type State = Record<string, any>;
 type Method<T> = (state: T, event?: Event, id?: string) => Promise<void>;
 type Getter<T> = (state: T) => any;
 type Condition<T> = (state: T) => boolean;
-type List<T> = (state: T) => Array<Record<string, any>>;
+type List<T> = (state: T) => Array<Partial<T>>;
 type AttributeGetter<T> = (state: T) => string | boolean | number | undefined | null;
 interface App<T> {
     updateState: (newState: Partial<T>) => Promise<void>;
