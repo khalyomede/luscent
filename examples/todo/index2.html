@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-count {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Add task form -->
+    <form data-luscent-on="submit" data-luscent-trigger="addTask">
+        <input type="text" data-luscent-bind="taskTitle" placeholder="Enter task title" />
+        <button type="submit">Add</button>
+    </form>
+
+    <!-- Fresh app -->
+    <div data-luscent-if="noTasks" data-luscent-template="noTasksDisclaimer"></div>
+
+    <!-- Uncompleted tasks list-->
+    <div data-luscent-if="someUncompletedTasks" data-luscent-template="uncompletedTasksList"></div>
+
+    <!-- Completed tasks list -->
+    <div data-luscent-if="someCompletedTasks" data-luscent-template="completedTasksList"></div>
+
+    <template id="noTasksDisclaimer">
+        <p>Use the form above to add a new task.</p>
+    </template>
+
+    <template id="uncompletedTasksList">
+        <h3>Tasks to do:</h3>
+        <ul data-luscent-for="uncompletedTasks" data-luscent-template="task"></ul>
+        <div class="task-count">
+            <span data-luscent-value="uncompletedTasksCount"></span> tasks to complete
+        </div>
+    </template>
+
+    <template id="completedTasksList">
+        <h3>Completed tasks:</h3>
+        <ul data-luscent-for="completedTasks" data-luscent-template="task"></ul>
+        <div class="task-count">
+            <span data-luscent-value="completedTasksCount"></span> completed tasks
+        </div>
+    </template>
+
+    <template id="task">
+        <li>
+            <input type="checkbox" data-luscent-attach="checked" data-luscent-with="completed" data-luscent-on="change"
+                data-luscent-trigger="toggleTask" />
+            <span data-luscent-value="title"></span>
+            <button data-luscent-on="click" data-luscent-trigger="deleteTask">Delete</button>
+        </li>
+    </template>
+
+    <!-- Include Luscent framework -->
+    <script>
+        /**
+         * Luscent - A minimalist reactive framework
+         */
+        (function () {
+            window.luscent = {
+                start
+            };
+
+            function start(options) {
+                const {
+                    state: initialState = {},
+                    methods = {},
+                    lists = {},
+                    conditions = {}
+                } = options;
+
+                // Create reactive state
+                let state = { ...initialState };
+
+                // State updater function to pass to methods
+                const setState = (newState) => {
+                    state = { ...state, ...newState };
+                    render();
+                };
+
+                // Main render function
+                function render() {
+                    // Handle conditional rendering
+                    renderConditionals();
+
+                    // Bind inputs to state values
+                    bindInputs(document.body);
+
+                    // Fill non-list values
+                    fillValues(document.body);
+
+                    // Bind event handlers
+                    bindEvents(document.body);
+                }
+
+                // Render conditionally shown templates
+                function renderConditionals() {
+                    Object.keys(conditions).forEach(key => {
+                        const isTrue = conditions[key](state);
+                        const elements = document.querySelectorAll(`[data-luscent-if="${key}"]`);
+
+                        elements.forEach(element => {
+                            const templateId = element.dataset.luscentTemplate;
+                            if (!templateId) return;
+
+                            const template = document.getElementById(templateId);
+                            if (!(template instanceof HTMLTemplateElement)) return;
+
+                            // Clear previous content
+                            element.innerHTML = '';
+
+                            if (isTrue) {
+                                const clone = template.content.cloneNode(true);
+                                element.appendChild(clone);
+
+                                // Render any lists inside this conditional
+                                renderLists(element);
+
+                                // Update values in the newly added content
+                                fillValues(element);
+
+                                // Bind inputs in the newly added content
+                                bindInputs(element);
+
+                                // Bind events in the newly added content
+                                bindEvents(element);
+                            }
+                        });
+                    });
+                }
+
+                // Render list templates
+                function renderLists(root) {
+                    root.querySelectorAll('[data-luscent-for]').forEach(element => {
+                        const listKey = element.dataset.luscentFor;
+                        if (!listKey || !lists[listKey]) return;
+
+                        const templateId = element.dataset.luscentTemplate;
+                        if (!templateId) return;
+
+                        const template = document.getElementById(templateId);
+                        if (!(template instanceof HTMLTemplateElement)) return;
+
+                        // Clear previous content
+                        element.innerHTML = '';
+
+                        // Get the list items
+                        const items = lists[listKey](state);
+
+                        // Add each item
+                        items.forEach(item => {
+                            const clone = template.content.cloneNode(true);
+
+                            // Set data-luscent-id for all children if item has id
+                            if (item.id !== undefined) {
+                                Array.from(clone.children).forEach(child => {
+                                    if (!(child instanceof HTMLElement)) return;
+                                    child.dataset.luscentId = String(item.id);
+                                });
+                            }
+
+                            // Fill values for this item
+                            fillItemValues(clone, item);
+
+                            // Set attributes for this item
+                            setItemAttributes(clone, item);
+
+                            element.appendChild(clone);
+                        });
+
+                        // Bind events in the newly added items
+                        bindEvents(element);
+                    });
+
+                    // Update counter values
+                    updateCounters(root);
+                }
+
+                // Update counter elements for task counts
+                function updateCounters(root) {
+                    if (lists.uncompletedTasks) {
+                        root.querySelectorAll('[data-luscent-value="uncompletedTasksCount"]').forEach(el => {
+                            el.textContent = String(lists.uncompletedTasks(state).length);
+                        });
+                    }
+
+                    if (lists.completedTasks) {
+                        root.querySelectorAll('[data-luscent-value="completedTasksCount"]').forEach(el => {
+                            el.textContent = String(lists.completedTasks(state).length);
+                        });
+                    }
+                }
+
+                // Fill values from state for regular elements
+                function fillValues(root) {
+                    root.querySelectorAll('[data-luscent-value]').forEach(el => {
+                        if (!(el instanceof HTMLElement)) return;
+
+                        const key = el.dataset.luscentValue;
+                        if (!key || state[key] === undefined) return;
+
+                        // Skip elements inside lists and counter elements
+                        if (el.closest('[data-luscent-for]')) return;
+                        if (key === 'uncompletedTasksCount' || key === 'completedTasksCount') return;
+
+                        el.textContent = String(state[key]);
+                    });
+                }
+
+                // Fill values for a specific item in a list
+                function fillItemValues(fragment, item) {
+                    fragment.querySelectorAll('[data-luscent-value]').forEach(el => {
+                        if (!(el instanceof HTMLElement)) return;
+
+                        const key = el.dataset.luscentValue;
+                        if (!key || item[key] === undefined) return;
+
+                        el.textContent = String(item[key]);
+                    });
+                }
+
+                // Set attributes for a specific item in a list
+                function setItemAttributes(fragment, item) {
+                    fragment.querySelectorAll('[data-luscent-attach][data-luscent-with]').forEach(el => {
+                        if (!(el instanceof HTMLElement)) return;
+
+                        const attrName = el.dataset.luscentAttach;
+                        const valueKey = el.dataset.luscentWith;
+
+                        if (!attrName || !valueKey || item[valueKey] === undefined) return;
+
+                        if (item[valueKey] === true) {
+                            el.setAttribute(attrName, '');
+                        } else if (item[valueKey] === false) {
+                            el.removeAttribute(attrName);
+                        } else {
+                            el.setAttribute(attrName, String(item[valueKey]));
+                        }
+                    });
+                }
+
+                // Bind input elements to state
+                function bindInputs(root) {
+                    root.querySelectorAll('[data-luscent-bind]').forEach(input => {
+                        if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) return;
+
+                        const key = input.dataset.luscentBind;
+                        if (!key) return;
+
+                        // Update input value from state
+                        if (input.value !== state[key]) {
+                            input.value = state[key] || '';
+                        }
+
+                        // Only add listener if not already bound
+                        if (input.dataset.luscentBoundInput === 'true') return;
+
+                        input.dataset.luscentBoundInput = 'true';
+
+                        input.addEventListener('input', () => {
+                            setState({ [key]: input.value });
+                        });
+                    });
+                }
+
+                // Bind event handlers
+                function bindEvents(root) {
+                    root.querySelectorAll('[data-luscent-on][data-luscent-trigger]').forEach(el => {
+                        if (!(el instanceof HTMLElement)) return;
+
+                        const eventName = el.dataset.luscentOn;
+                        const methodName = el.dataset.luscentTrigger;
+
+                        if (!eventName || !methodName || !methods[methodName]) return;
+
+                        // Only add listener if not already bound
+                        if (el.dataset.luscentBound === 'true') return;
+
+                        el.dataset.luscentBound = 'true';
+
+                        el.addEventListener(eventName, event => {
+                            // Prevent form submission
+                            if (el instanceof HTMLFormElement && eventName === 'submit') {
+                                event.preventDefault();
+                            }
+
+                            // Get id from this element or closest parent with id
+                            let id = el.dataset.luscentId;
+                            if (!id) {
+                                const parent = el.closest('[data-luscent-id]');
+                                if (parent) {
+                                    id = parent.dataset.luscentId;
+                                }
+                            }
+
+                            // Call the method with state, setState, and id
+                            methods[methodName](state, setState, id);
+                        });
+                    });
+                }
+
+                // Initial render
+                render();
+
+                return {
+                    getState: () => state,
+                    setState
+                };
+            }
+        })();
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const { start } = window.luscent;
+
+            start({
+                state: {
+                    taskTitle: "",
+                    tasks: [
+                        {
+                            id: 1,
+                            title: "Do the dishes",
+                            completed: false,
+                        },
+                        {
+                            id: 2,
+                            title: "Finish this project",
+                            completed: false
+                        },
+                    ],
+                },
+                lists: {
+                    uncompletedTasks: ({ tasks }) => tasks.filter(task => !task.completed),
+                    completedTasks: ({ tasks }) => tasks.filter(task => task.completed),
+                },
+                conditions: {
+                    noTasks: ({ tasks }) => tasks.length === 0,
+                    someUncompletedTasks: ({ tasks }) => tasks.filter(task => !task.completed).length > 0,
+                    someCompletedTasks: ({ tasks }) => tasks.filter(task => task.completed).length > 0,
+                },
+                methods: {
+                    addTask: (state, setState) => {
+                        if (!state.taskTitle.trim()) return;
+
+                        setState({
+                            taskTitle: "",
+                            tasks: [
+                                ...state.tasks,
+                                {
+                                    id: (state.tasks.length > 0 ? Math.max(...state.tasks.map(t => t.id)) : 0) + 1,
+                                    title: state.taskTitle,
+                                    completed: false,
+                                },
+                            ],
+                        });
+                    },
+                    deleteTask: (state, setState, id) => {
+                        setState({
+                            tasks: state.tasks.filter(task => task.id != id),
+                        });
+                    },
+                    toggleTask: (state, setState, id) => {
+                        setState({
+                            tasks: state.tasks.map(task =>
+                                task.id == id
+                                    ? { ...task, completed: !task.completed }
+                                    : task
+                            )
+                        });
+                    }
+                },
+            });
+        });
+    </script>
+</body>
+
+</html>

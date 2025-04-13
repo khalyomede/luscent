@@ -27,8 +27,7 @@
     <main class="container mt-5">
         <div class="row">
             <div class="col col-12 col-md-10 col-lg-8 col-xl-6 offset-md-1 offset-lg-2 offset-xl-3">
-                <div class="row" data-luscent-for="posts" data-luscent-key="id" data-luscent-as="post"
-                    data-luscent-template="post"></div>
+                <div class="row" data-luscent-for="posts" data-luscent-template="post"></div>
                 <div class="row my-3 text-center" data-luscent-if="somePosts" data-luscent-template="load-more"></div>
             </div>
         </div>
@@ -72,7 +71,8 @@
     </template>
 
     <template id="load-more-button">
-        <button class="btn btn-primary btn-sm" data-luscent-on-click="loadMorePosts">load more</button>
+        <button class="btn btn-primary btn-sm" data-luscent-on="click" data-luscent-trigger="loadMorePosts">load
+            more</button>
     </template>
 
     <template id="loading-button">
@@ -104,29 +104,36 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const { start } = window.luscent;
 
+            const posts = await fetchPosts(1);
+
+            console.log("posts", posts);
+
             const app = start({
                 state: {
-                    feed: await fetchPosts(1),
+                    feed: posts,
                     loading: false,
                     currentPage: 1,
+                },
+                getters: {
+                    likes: ({ likes }) => likes,
                 },
                 lists: {
                     posts: ({ feed }) => feed,
                 },
                 conditions: {
-                    somePosts: ({ feed }) => feed.length > 0,
+                    somePosts: ({ feed }) => feed?.length > 0,
                     notLoadingPosts: ({ loading }) => !loading,
                     loadingPosts: ({ loading }) => loading,
                 },
                 methods: {
-                    loadMorePosts: async (state) => {
-                        app.updateState({
+                    loadMorePosts: async (state, updateState) => {
+                        await app.updateState({
                             loading: true,
                         });
 
                         const nextPage = state.currentPage + 1;
 
-                        app.updateState({
+                        await app.updateState({
                             posts: state.feed.push(...await fetchPosts(nextPage)),
                             currentPage: nextPage,
                             loading: false,

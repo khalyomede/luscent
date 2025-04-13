@@ -57,14 +57,17 @@
 
             const app = start({
                 state: {
-                    score: 0,
+                    currentScore: 0,
+                },
+                getters: {
+                    score: ({ currentScore }) => currentScore,
                 },
                 methods: {
-                    increment: (state) => app.updateState({
-                        score: state.score + 1,
+                    increment: async ({ currentScore }) => await app.updateState({
+                        currentScore: currentScore + 1,
                     }),
-                    decrement: (state) => app.updateState({
-                        score: state.score - 1,
+                    decrement: async ({ currentScore }) => await app.updateState({
+                        currentScore: currentScore - 1,
                     }),
                 },
             });

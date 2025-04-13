@@ -54,16 +54,22 @@
 
             const app = start({
                 state: {
-                    quote: "Be the change that you wish to see in the world.",
-                    author: "Mahatma Gandhi",
-                    isLoading: false,
-                    isNotLoading: true,
+                    quoteText: "Be the change that you wish to see in the world.",
+                    quoteAuthor: "Mahatma Gandhi",
+                    loading: false,
+                },
+                getters: {
+                    quote: ({ quoteText }) => quoteText,
+                    author: ({ quoteAuthor }) => quoteAuthor,
+                },
+                conditions: {
+                    isLoading: ({ loading }) => loading === true,
+                    isNotLoading: ({ loading }) => loading === false,
                 },
                 methods: {
-                    inspire: async (state) => {
+                    inspire: async () => {
                         await app.updateState({
-                            isLoading: true,
-                            isNotLoading: false,
+                            loading: true,
                         });
 
                         await sleep(2500);
@@ -72,10 +78,9 @@
                         const json = await response.json();
 
                         await app.updateState({
-                            quote: json.quote,
-                            author: json.author,
-                            isLoading: false,
-                            isNotLoading: true,
+                            quoteText: json.quote,
+                            quoteAuthor: json.author,
+                            loading: false,
                         });
                     },
                 },

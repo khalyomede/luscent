@@ -12,7 +12,7 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 
-<body data-luscent-attribute="data-bs-theme" data-luscent-with="bsTheme" data-bs-theme="dark">
+<body data-luscent-attach="data-bs-theme" data-luscent-with="bsTheme" data-bs-theme="dark">
     <header class="navbar bg-body-tertiary">
         <nav class="container-fluid">
             <div class="container">
@@ -21,8 +21,10 @@
                         <a class="navbar-brand" href="#">Theme switcher</a>
                     </div>
                     <div class="col col-2">
-                        <div data-luscent-if="light" data-luscent-template="switch-to-dark"></div>
-                        <div data-luscent-if="dark" data-luscent-template="switch-to-light"></div>
+                        <button class="btn btn-outline-secondary" data-luscent-on="click"
+                            data-luscent-trigger="toggleTheme">
+                            <i class="fa-solid fa-moon"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -31,22 +33,12 @@
     <main class="container mt-5">
         <div class="row">
             <div class="col col-12 col-md-10 col-lg-8 col-xl-6 offset-md-1 offset-lg-2 offset-xl-3">
-                <div class="alert alert-light" data-luscent-set-class="class" data-luscent-value="disclaimer"></div>
+                <div class="alert alert-dark" data-luscent-attach="class" data-luscent-with="class">
+                    You are currently using the <span data-luscent-value="currentTheme">dark</span> theme.
+                </div>
             </div>
         </div>
     </main>
-
-    <template id="switch-to-dark">
-        <button class="btn btn-outline-secondary" data-luscent-on-click="switchToDark">
-            <i class="fa-solid fa-moon"></i>
-        </button>
-    </template>
-
-    <template id="switch-to-light">
-        <button class="btn btn-outline-secondary" data-luscent-on-click="switchToLight">
-            <i class="fa-solid fa-sun"></i>
-        </button>
-    </template>
 
     <script src="index.js"></script>
     <script>
@@ -55,27 +47,19 @@
 
             const app = start({
                 state: {
-                    light: false,
-                    dark: true,
-                    disclaimer: "You are currently using the dark theme.",
-                    class: "alert alert-light",
-                    bsTheme: "dark",
+                    theme: "dark",
+                },
+                getters: {
+                    currentTheme: ({ theme }) => theme,
                 },
                 methods: {
-                    switchToLight: () => app.updateState({
-                        light: true,
-                        dark: false,
-                        disclaimer: "You are currently using the light theme.",
-                        class: "alert alert-dark",
-                        bsTheme: "light",
+                    toggleTheme: async ({ theme }) => await app.updateState({
+                        theme: theme === "dark" ? "light" : "dark",
                     }),
-                    switchToDark: () => app.updateState({
-                        light: false,
-                        dark: true,
-                        disclaimer: "You are currently using the dark theme.",
-                        class: "alert alert-light",
-                        bsTheme: "dark",
-                    })
+                },
+                attributes: {
+                    bsTheme: ({ theme }) => theme,
+                    class: ({ theme }) => theme === "dark" ? "alert alert-dark" : "alert alert-light",
                 },
             });
         });

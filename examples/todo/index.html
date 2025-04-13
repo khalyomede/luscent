@@ -4,9 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo List Demo - Luscent</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Todo List - Luscent Example</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body data-bs-theme="dark">
@@ -15,7 +14,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col col-12 col-md-10 col-lg-8 col-xl-6 offset-md-1 offset-lg-2 offset-xl-3">
-                        <a class="navbar-brand" href="#">Todo</a>
+                        <a class="navbar-brand" href="#">Todo List</a>
                     </div>
                 </div>
             </div>
@@ -24,171 +23,413 @@
     <main class="container mt-5">
         <div class="row">
             <div class="col col-12 col-md-10 col-lg-8 col-xl-6 offset-md-1 offset-lg-2 offset-xl-3">
+                <!-- Add Task Form -->
                 <div class="row">
                     <div class="col col-12">
                         <form data-luscent-on="submit" data-luscent-trigger="addTask"
                             data-luscent-prevent-default="true">
                             <div class="input-group mb-3">
-                                <input type="text" class="form-control" placeholder="Feed the cat, Do the dishes, ..."
-                                    aria-label="Feed the cat, Do the dishes, ..." aria-describedby="button-addon2"
-                                    data-luscent-bind="newTaskTitle" data-luscent-bind-on="input" />
-                                <button class="btn btn-outline-secondary" type="submit" id="button-addon2">add</button>
+                                <input type="text" class="form-control" placeholder="Add a new task..."
+                                    data-luscent-bind="newTaskTitle" />
+                                <button class="btn btn-outline-primary" type="submit">Add Task</button>
                             </div>
                         </form>
                     </div>
                 </div>
-                <div data-luscent-if="noTasks" data-luscent-template="empty-tasks-disclaimer"></div>
-                <div data-luscent-if="someUncompletedTasks" data-luscent-template="tasks-list"></div>
-                <div data-luscent-if="someCompletedTasks" data-luscent-template="completed-tasks-list" class="mt-5">
+
+                <!-- Empty state message -->
+                <div data-luscent-if="noTasks" data-luscent-template="empty-tasks-template"></div>
+
+                <!-- Incomplete tasks section -->
+                <div data-luscent-if="hasIncompleteTasks" data-luscent-template="incomplete-tasks-template"></div>
+
+                <!-- Completed tasks section -->
+                <div data-luscent-if="hasCompletedTasks" data-luscent-template="completed-tasks-template" class="mt-4">
                 </div>
             </div>
         </div>
     </main>
 
     <!-- Templates -->
-    <template id="empty-tasks-disclaimer">
+    <template id="empty-tasks-template">
         <div class="alert alert-secondary" role="alert">
-            This is where you tasks will be displayed.
+            No tasks yet. Add a task to get started!
         </div>
     </template>
 
-    <template id="incomplete-tasks">
-        <li class="list-group-item d-flex align-items-center gap-3">
-            <input class="form-check-input" type="checkbox" value="" id="firstCheckboxStretched"
-                data-luscent-on="change" data-luscent-trigger="markTaskAsCompleted" data-luscent-id="id">
-            <label class="form-check-label flex-grow-1" for="firstCheckboxStretched" data-luscent-value="title"></label>
-            <button class="btn btn-sm btn-outline-danger" data-luscent-on-click="deleteTask"
-                data-luscent-id="id">delete</button>
+    <template id="incomplete-tasks-template">
+        <h5 class="mb-3">Tasks to do</h5>
+        <ul class="list-group mb-3" data-luscent-for="incompleteTasks" data-luscent-template="task-item-template"
+            data-luscent-key="id"></ul>
+        <div class="text-secondary small">
+            <span data-luscent-value="incompleteTasksCount"></span> tasks remaining
+        </div>
+    </template>
+
+    <template id="completed-tasks-template">
+        <h5 class="mb-3">Completed</h5>
+        <ul class="list-group mb-3" data-luscent-for="completedTasks" data-luscent-template="completed-task-template"
+            data-luscent-key="id"></ul>
+        <div class="text-secondary small">
+            <span data-luscent-value="completedTasksCount"></span> tasks completed
+        </div>
+    </template>
+
+    <template id="task-item-template">
+        <li class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-3" type="checkbox" data-luscent-on="change"
+                data-luscent-trigger="markAsCompleted">
+            <span class="flex-grow-1" data-luscent-value="title"></span>
+            <button class="btn btn-sm btn-outline-danger" data-luscent-on="click"
+                data-luscent-trigger="deleteTask">Delete</button>
         </li>
     </template>
 
-    <template id="completed-tasks">
-        <li class="list-group-item d-flex align-items-center gap-3">
-            <input class="form-check-input" type="checkbox" checked data-luscent-on="change"
-                data-luscent-trigger="markTaskAsIncomplete" data-luscent-id="id">
-            <label class="form-check-label flex-grow-1 text-decoration-line-through" data-luscent-value="title"></label>
-            <button class="btn btn-sm btn-outline-danger" data-luscent-on="click" data-luscent-trigger="deleteTask"
-                data-luscent-id="id">delete</button>
+    <template id="completed-task-template">
+        <li class="list-group-item d-flex align-items-center">
+            <input class="form-check-input me-3" type="checkbox" checked data-luscent-on="change"
+                data-luscent-trigger="markAsIncomplete">
+            <span class="flex-grow-1 text-decoration-line-through" data-luscent-value="title"></span>
+            <button class="btn btn-sm btn-outline-danger" data-luscent-on="click"
+                data-luscent-trigger="deleteTask">Delete</button>
         </li>
     </template>
 
-    <template id="tasks-list">
-        <div class="row">
-            <div class="col col-12">
-                <ul class="list-group" data-luscent-for="incompletedTasks" data-luscent-key="id"
-                    data-luscent-template="incomplete-tasks">
-                </ul>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col col-12 text-secondary">
-                <span data-luscent-value="numberOfTasksToComplete"></span> remaining task(s).
-            </div>
-        </div>
-    </template>
-
-    <template id="completed-tasks-list">
-        <div class="row">
-            <div class="col col-12">
-                <ul class="list-group" data-luscent-for="completedTasks" data-luscent-template="completed-tasks">
-                </ul>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col col-12 text-secondary">
-                <span data-luscent-value="numberOfCompletedTasks"></span> completed task(s).
-            </div>
-        </div>
-    </template>
-
-    <script src="index.js"></script>
+    <!-- Include Luscent -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const { start } = window.luscent;
+        // Copy the compiled luscent.js code here or load it from a file
+        // Type definitions
+        const start = function (parameters) {
+            const state = parameters.state || {};
+            const methods = parameters.methods || {};
+            const getters = parameters.getters || {};
+            const conditions = parameters.conditions || {};
+            const lists = parameters.lists || {};
 
-            const app = start({
-                state: {
-                    incompletedTasks: [
-                        { id: 1, title: "Learn Luscent" },
-                        { id: 2, title: "Build a todo app" }
-                    ],
-                    completedTasks: [],
-                    newTaskTitle: "",
-                    numberOfTasksToComplete: 2,
-                    numberOfCompletedTasks: 0,
-                    someUncompletedTasks: true,
-                    someCompletedTasks: false,
-                    noTasks: false,
-                },
-                onStateChanged: (state) => ({
-                    noTasks: state.incompletedTasks.length === 0 && state.completedTasks.length === 0,
-                    someCompletedTasks: state.completedTasks.length > 0,
-                    someUncompletedTasks: state.incompletedTasks.length > 0,
-                    numberOfTasksToComplete: state.incompletedTasks.length,
-                    numberOfCompletedTasks: state.completedTasks.length,
-                }),
-                methods: {
-                    lists: {
-                        incompleteTasks: ({ tasks }) => tasks.filter(task => !task.completed),
-                        completedTasks: ({ tasks }) => tasks.filter(task => task.completed),
-                    },
-                    addTask: async (state) => {
-                        console.log("adding task...");
-                        if (!state.newTaskTitle.trim()) {
-                            return state;
+            const context = { state };
+
+            // Function to update state and re-render
+            const updateState = async (newState) => {
+                // Update state
+                Object.assign(context.state, newState);
+
+                // Re-render DOM
+                await updateDOM(context, getters, methods, conditions, lists);
+
+                // Bind events and two-way binding
+                bindEvents(context, methods, document);
+                bindTwoWay(context, methods, updateState, document);
+            };
+
+            // Helper functions
+            function findElementsByAttribute(attr, root = document) {
+                return Array.from(root.querySelectorAll(`[${attr}]`)).filter(
+                    (el) => el instanceof HTMLElement
+                );
+            }
+
+            function findElementsByAttributeValue(attr, value, root = document) {
+                return Array.from(root.querySelectorAll(`[${attr}="${value}"]`)).filter(
+                    (el) => el instanceof HTMLElement
+                );
+            }
+
+            async function renderValue(context, getters, root = document, localData) {
+                const elements = findElementsByAttribute('data-luscent-value', root);
+
+                for (const element of elements) {
+                    // Skip elements inside for loops unless localData is provided
+                    if (!localData && element.closest('[data-luscent-for]')) {
+                        continue;
+                    }
+
+                    const getterName = element.getAttribute('data-luscent-value');
+                    if (!getterName) continue;
+
+                    let value;
+                    if (localData && getterName in localData) {
+                        value = localData[getterName];
+                    } else if (getters[getterName]) {
+                        value = getters[getterName](context.state);
+                    } else if (getterName in context.state) {
+                        value = context.state[getterName];
+                    } else {
+                        console.warn(`No getter or state property found for data-luscent-value="${getterName}"`);
+                        continue;
+                    }
+
+                    if (element instanceof HTMLInputElement) {
+                        element.value = String(value);
+                    } else {
+                        element.textContent = String(value);
+                    }
+                }
+            }
+
+            async function renderIf(context, getters, methods, conditions, lists, root = document) {
+                for (const condition in conditions) {
+                    const elements = findElementsByAttributeValue('data-luscent-if', condition, root);
+                    const isTrue = conditions[condition](context.state);
+
+                    for (const element of elements) {
+                        const templateId = element.dataset.luscentTemplate;
+                        if (!templateId) continue;
+
+                        const template = document.getElementById(templateId);
+                        if (!(template instanceof HTMLTemplateElement)) continue;
+
+                        // Clear existing content
+                        element.innerHTML = '';
+
+                        if (isTrue) {
+                            const clone = template.content.cloneNode(true);
+                            element.appendChild(clone);
+
+                            // Update DOM inside this conditional element
+                            await updateDOM(context, getters, methods, conditions, lists, element);
+                        }
+                    }
+                }
+            }
+
+            async function renderFor(context, getters, methods, conditions, lists, root = document) {
+                const forElements = findElementsByAttribute('data-luscent-for', root);
+
+                for (const element of forElements) {
+                    const listName = element.dataset.luscentFor;
+                    if (!listName || !lists[listName]) continue;
+
+                    const templateId = element.dataset.luscentTemplate;
+                    if (!templateId) continue;
+
+                    const template = document.getElementById(templateId);
+                    if (!(template instanceof HTMLTemplateElement)) continue;
+
+                    const keyName = element.dataset.luscentKey || 'id';
+
+                    // Get items from list function
+                    const items = lists[listName](context.state);
+
+                    // Clear the element before re-rendering
+                    element.innerHTML = '';
+
+                    // Process each item
+                    for (const item of items) {
+                        const keyValue = item[keyName];
+
+                        // Clone template
+                        const clone = template.content.cloneNode(true);
+
+                        // Process the clone before adding to DOM
+                        Array.from(clone.children).forEach(child => {
+                            if (child instanceof HTMLElement) {
+                                // Store item ID for event handling
+                                if (keyValue !== undefined) {
+                                    child.dataset.luscentId = String(keyValue);
+                                }
+                            }
+                        });
+
+                        // Add to DOM
+                        element.appendChild(clone);
+
+                        // Process the last added element with this item's data
+                        const addedElement = element.lastElementChild;
+                        if (addedElement && addedElement instanceof HTMLElement) {
+                            // Render values specific to this item
+                            await renderValue(context, getters, addedElement, item);
+
+                            // Bind events for this item
+                            bindEvents(context, methods, addedElement);
+                        }
+                    }
+                }
+            }
+
+            function renderBind(context, root = document) {
+                const elements = findElementsByAttribute('data-luscent-bind', root);
+
+                for (const element of elements) {
+                    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) continue;
+
+                    const key = element.dataset.luscentBind;
+                    if (!key || !(key in context.state)) continue;
+
+                    // Update input from state
+                    const value = context.state[key];
+                    element.value = String(value || '');
+                }
+            }
+
+            function bindTwoWay(context, methods, updateStateFn, root = document) {
+                const elements = findElementsByAttribute('data-luscent-bind', root);
+
+                for (const element of elements) {
+                    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) continue;
+
+                    const key = element.dataset.luscentBind;
+                    if (!key) continue;
+
+                    // Skip if already bound
+                    if (element.dataset.luscentBound === 'true') continue;
+
+                    // Mark as bound
+                    element.dataset.luscentBound = 'true';
+
+                    // Add input event listener
+                    element.addEventListener('input', async () => {
+                        const newState = { [key]: element.value };
+                        await updateStateFn(newState);
+                    });
+                }
+            }
+
+            function bindEvents(context, methods, root = document) {
+                // Find all elements with event triggers
+                const elements = root.querySelectorAll('[data-luscent-on][data-luscent-trigger]');
+
+                for (const element of elements) {
+                    if (!(element instanceof HTMLElement)) continue;
+
+                    // Skip if already bound
+                    if (element.dataset.luscentBound === 'true') continue;
+
+                    const eventName = element.dataset.luscentOn;
+                    const methodName = element.dataset.luscentTrigger;
+
+                    if (!eventName || !methodName || !methods[methodName]) continue;
+
+                    // Mark as bound
+                    element.dataset.luscentBound = 'true';
+
+                    element.addEventListener(eventName, async (event) => {
+                        // Prevent default if specified
+                        if (element.dataset.luscentPreventDefault === 'true') {
+                            event.preventDefault();
                         }
 
-                        await app.updateState({
-                            incompletedTasks: [
-                                ...state.incompletedTasks,
-                                {
-                                    id: state.incompletedTasks.length === 0
-                                        ? 1
-                                        : Math.max(...state.incompletedTasks.map((incompletedTask) => incompletedTask.id)) + 1,
-                                    title: state.newTaskTitle,
-                                    completed: false
-                                },
-                            ],
-                            newTaskTitle: "",
-                        });
-                    },
-                    deleteTask: (state, event, id) => {
-                        // const deletedTask = state.tasks.filter(fn (task) => task.id === id);
+                        // Get ID for this element
+                        const id = element.dataset.luscentId ||
+                            (element.closest('[data-luscent-id]')?.getAttribute('data-luscent-id') || undefined);
 
-                        // app.updateState({
-                        //     tasks: updatedTasks,
-                        // });
-                    },
-                    markTaskAsCompleted: async (state, event, id) => {
-                        console.debug("state", state);
-                        console.debug("marking as complete id", id);
+                        // Call method
+                        await methods[methodName](context.state, event, id);
+                    });
+                }
+            }
 
-                        const task = state.incompletedTasks.filter((task) => task.id == id)[0];
+            async function updateDOM(context, getters, methods, conditions, lists, root = document) {
+                // First, render all conditionals
+                await renderIf(context, getters, methods, conditions, lists, root);
 
-                        await app.updateState({
-                            incompletedTasks: state.incompletedTasks.filter((task) => task.id != id),
-                            completedTasks: [
-                                ...state.completedTasks,
-                                task,
-                            ],
-                        });
-                    },
-                    markTaskAsIncomplete: (state, event, id) => app.updateState({
-                        tasks: state.tasks.map((task) => task.id == id
-                            ? {
-                                ...task,
-                                completed: false,
-                            }
-                            : task
-                        )
-                    }),
+                // Then render lists (for loops)
+                await renderFor(context, getters, methods, conditions, lists, root);
+
+                // Then render regular values
+                await renderValue(context, getters, root);
+
+                // Then handle two-way binding
+                renderBind(context, root);
+            }
+
+            // Initial render
+            setTimeout(async () => {
+                await updateDOM(context, getters, methods, conditions, lists);
+                bindEvents(context, methods, document);
+                bindTwoWay(context, methods, updateState, document);
+                console.log('Luscent initialized successfully');
+            }, 0);
+
+            return { updateState };
+        };
+
+        window.luscent = { start };
+    </script>
+
+    <!-- App script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const { start } = window.luscent;
+
+            // Initialize the app
+            const app = start({
+                state: {
+                    tasks: [
+                        { id: 1, title: "Learn Luscent", completed: false },
+                        { id: 2, title: "Build a todo app", completed: false }
+                    ],
+                    newTaskTitle: ""
                 },
+
+                getters: {
+                    incompleteTasksCount: (state) => state.tasks.filter(task => !task.completed).length,
+                    completedTasksCount: (state) => state.tasks.filter(task => task.completed).length
+                },
+
+                conditions: {
+                    noTasks: (state) => state.tasks.length === 0,
+                    hasIncompleteTasks: (state) => state.tasks.some(task => !task.completed),
+                    hasCompletedTasks: (state) => state.tasks.some(task => task.completed)
+                },
+
+                lists: {
+                    incompleteTasks: (state) => state.tasks.filter(task => !task.completed),
+                    completedTasks: (state) => state.tasks.filter(task => task.completed)
+                },
+
+                methods: {
+                    addTask: async (state, event) => {
+                        if (!state.newTaskTitle.trim()) return;
+
+                        // Generate a unique ID
+                        const maxId = state.tasks.length > 0
+                            ? Math.max(...state.tasks.map(t => t.id))
+                            : 0;
+
+                        await app.updateState({
+                            tasks: [
+                                ...state.tasks,
+                                { id: maxId + 1, title: state.newTaskTitle, completed: false }
+                            ],
+                            newTaskTitle: ""
+                        });
+                    },
+
+                    markAsCompleted: async (state, event, id) => {
+                        const taskId = parseInt(id);
+
+                        const updatedTasks = state.tasks.map(task =>
+                            task.id === taskId
+                                ? { ...task, completed: true }
+                                : task
+                        );
+
+                        await app.updateState({ tasks: updatedTasks });
+                    },
+
+                    markAsIncomplete: async (state, event, id) => {
+                        const taskId = parseInt(id);
+
+                        const updatedTasks = state.tasks.map(task =>
+                            task.id === taskId
+                                ? { ...task, completed: false }
+                                : task
+                        );
+
+                        await app.updateState({ tasks: updatedTasks });
+                    },
+
+                    deleteTask: async (state, event, id) => {
+                        const taskId = parseInt(id);
+
+                        const updatedTasks = state.tasks.filter(task => task.id !== taskId);
+
+                        await app.updateState({ tasks: updatedTasks });
+                    }
+                }
             });
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
 </body>
 
 </html>
