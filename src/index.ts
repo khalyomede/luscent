@@ -127,16 +127,25 @@ async function renderIf<T extends State>(
             const template = document.getElementById(templateId);
             if (!(template instanceof HTMLTemplateElement)) continue;
 
-            // Clear existing content
-            element.innerHTML = '';
-
-            if (isTrue) {
-                const clone = template.content.cloneNode(true) as DocumentFragment;
-                element.appendChild(clone);
-
-                // Update DOM inside this conditional element
-                await updateDOM(context, getters, methods, conditions, lists, attributes, element);
+            // Check if the element already has content and the condition is still true
+            if (isTrue && element.children.length > 0) {
+                // Skip re-rendering if the content is already present
+                continue;
             }
+
+            // Clear existing content if the condition is false
+            if (!isTrue) {
+                element.innerHTML = '';
+                continue;
+            }
+
+            // Render the template if the condition is true and the element is empty
+            element.innerHTML = '';
+            const clone = template.content.cloneNode(true) as DocumentFragment;
+            element.appendChild(clone);
+
+            // Update DOM inside this conditional element
+            await updateDOM(context, getters, methods, conditions, lists, attributes, element);
         }
     }
 }
