@@ -167,44 +167,53 @@ async function renderFor<T extends State>(
         // Get items from list function
         const items = lists[listName](context.state);
 
-        // Clear the element before re-rendering
-        element.innerHTML = '';
+        // Track existing items in the DOM
+        const existingItems = new Map<string, HTMLElement>();
+        Array.from(element.children).forEach((child) => {
+            if (child instanceof HTMLElement && child.dataset.luscentId) {
+                existingItems.set(child.dataset.luscentId, child);
+            }
+        });
 
-        // Process each item
+        // Track processed keys
+        const processedKeys = new Set<string>();
+
+        // Update or add items
         for (const item of items) {
-            const keyValue = item[keyName];
+            const keyValue = String(item[keyName]);
+            processedKeys.add(keyValue);
 
-            // Clone template
-            const clone = template.content.cloneNode(true) as DocumentFragment;
-
-            // Process the clone before adding to DOM
-            Array.from(clone.children).forEach(child => {
-                if (child instanceof HTMLElement) {
-                    // Store item ID for event handling
-                    if (keyValue !== undefined) {
-                        child.dataset.luscentId = String(keyValue);
+            if (existingItems.has(keyValue)) {
+                // Update existing item
+                const existingElement = existingItems.get(keyValue)!;
+                await renderValue(context, getters, existingElement, item);
+                await renderAttributes(context, attributes, existingElement, item);
+                bindEvents(context, methods, existingElement);
+            } else {
+                // Add new item
+                const clone = template.content.cloneNode(true) as DocumentFragment;
+                Array.from(clone.children).forEach((child) => {
+                    if (child instanceof HTMLElement) {
+                        child.dataset.luscentId = keyValue;
                     }
+                });
+                element.appendChild(clone);
+
+                const addedElement = element.lastElementChild as HTMLElement;
+                if (addedElement) {
+                    await renderValue(context, getters, addedElement, item);
+                    await renderAttributes(context, attributes, addedElement, item);
+                    bindEvents(context, methods, addedElement);
                 }
-            });
-
-            // Add to DOM
-            element.appendChild(clone);
-
-            // Process the last added element with this item's data
-            const addedElement = element.lastElementChild;
-            if (addedElement && addedElement instanceof HTMLElement) {
-                // Render values specific to this item
-                await renderValue(context, getters, addedElement, item);
-
-                await renderAttributes(context, attributes, addedElement, item);
-
-                // Set attributes for this item if needed
-                // Here we could add special handling for item-specific attributes
-
-                // Bind events for this item
-                bindEvents(context, methods, addedElement);
             }
         }
+
+        // Remove items that are no longer in the list
+        existingItems.forEach((child, key) => {
+            if (!processedKeys.has(key)) {
+                child.remove();
+            }
+        });
     }
 }
 
