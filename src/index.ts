@@ -14,6 +14,15 @@ interface App<T> {
     updateState: (newState: Partial<T>) => Promise<void>;
 }
 
+interface DebugOptions {
+    enabled: boolean;
+    showRenderCount: boolean;
+}
+
+interface Options {
+    debug: DebugOptions;
+};
+
 interface StartParameters<T> {
     state?: T;
     methods?: Record<string, Method<T>>;
@@ -21,6 +30,7 @@ interface StartParameters<T> {
     conditions?: Record<string, Condition<T>>;
     lists?: Record<string, List<T>>;
     attributes?: Record<string, AttributeGetter<T>>;
+    options: Options;
 }
 
 // DOM Utilities
@@ -37,7 +47,9 @@ function findElementsByAttributeValue(attr: string, value: string, root: ParentN
 }
 
 // Core functions
-async function renderValue<T extends State>(context: Context<T>, getters: Record<string, Getter<T>>, root: ParentNode = document, localData?: Record<string, any>): Promise<void> {
+async function renderValue<T extends State>(context: Context<T>, getters: Record<string, Getter<T>>, root: ParentNode = document, localData?: Record<string, any>): Promise<number> {
+    let renderCount = 0;
+
     const elements = findElementsByAttribute('data-luscent-value', root);
 
     for (const element of elements) {
@@ -62,14 +74,22 @@ async function renderValue<T extends State>(context: Context<T>, getters: Record
         }
 
         if (element instanceof HTMLInputElement) {
+            renderCount += 1;
+
             element.value = String(value);
         } else {
+            renderCount += 1;
+
             element.textContent = String(value);
         }
     }
+
+    return renderCount;
 }
 
-function renderAttributes<T extends State>(context: Context<T>, attributes: Record<string, AttributeGetter<T>>, root: ParentNode = document, localData?: Partial<T>): void {
+function renderAttributes<T extends State>(context: Context<T>, attributes: Record<string, AttributeGetter<T>>, root: ParentNode = document, localData?: Partial<T>): number {
+    let renderCount = 0;
+
     const elements = findElementsByAttribute('data-luscent-attach', root);
 
     for (const element of elements) {
@@ -97,14 +117,22 @@ function renderAttributes<T extends State>(context: Context<T>, attributes: Reco
 
         // Set or remove the attribute based on value
         if (value === undefined || value === null) {
+            renderCount += 1;
+
             element.removeAttribute(attributeName);
         } else if (value === true) {
+            renderCount += 1;
+
             // For boolean attributes (like disabled, checked, etc.)
             element.setAttribute(attributeName, '');
         } else {
+            renderCount += 1;
+
             element.setAttribute(attributeName, String(value));
         }
     }
+
+    return renderCount;
 }
 
 async function renderIf<T extends State>(
@@ -115,7 +143,9 @@ async function renderIf<T extends State>(
     lists: Record<string, List<T>>,
     attributes: Record<string, AttributeGetter<T>>,
     root: ParentNode = document
-): Promise<void> {
+): Promise<number> {
+    let renderCount = 0;
+
     for (const condition in conditions) {
         const elements = findElementsByAttributeValue('data-luscent-if', condition, root);
         const isTrue = conditions[condition](context.state);
@@ -135,19 +165,28 @@ async function renderIf<T extends State>(
 
             // Clear existing content if the condition is false
             if (!isTrue) {
+                renderCount += 1;
+
                 element.innerHTML = '';
                 continue;
             }
 
+            renderCount += 1;
+
             // Render the template if the condition is true and the element is empty
             element.innerHTML = '';
             const clone = template.content.cloneNode(true) as DocumentFragment;
+
+            renderCount += 1;
+
             element.appendChild(clone);
 
             // Update DOM inside this conditional element
-            await updateDOM(context, getters, methods, conditions, lists, attributes, element);
+            renderCount += await updateDOM(context, getters, methods, conditions, lists, attributes, element);
         }
     }
+
+    return renderCount
 }
 
 async function renderFor<T extends State>(
@@ -158,7 +197,9 @@ async function renderFor<T extends State>(
     lists: Record<string, List<T>>,
     attributes: Record<string, AttributeGetter<T>>,
     root: ParentNode = document
-): Promise<void> {
+): Promise<number> {
+    let renderCount = 0;
+
     const forElements = findElementsByAttribute('data-luscent-for', root);
 
     for (const element of forElements) {
@@ -195,8 +236,9 @@ async function renderFor<T extends State>(
             if (existingItems.has(keyValue)) {
                 // Update existing item
                 const existingElement = existingItems.get(keyValue)!;
-                await renderValue(context, getters, existingElement, item);
-                await renderAttributes(context, attributes, existingElement, item);
+
+                renderCount += await renderValue(context, getters, existingElement, item);
+                renderCount += await renderAttributes(context, attributes, existingElement, item);
                 bindEvents(context, methods, existingElement);
             } else {
                 // Add new item
@@ -206,12 +248,15 @@ async function renderFor<T extends State>(
                         child.dataset.luscentId = keyValue;
                     }
                 });
+
+                renderCount += 1;
+
                 element.appendChild(clone);
 
                 const addedElement = element.lastElementChild as HTMLElement;
                 if (addedElement) {
-                    await renderValue(context, getters, addedElement, item);
-                    await renderAttributes(context, attributes, addedElement, item);
+                    renderCount += await renderValue(context, getters, addedElement, item);
+                    renderCount += await renderAttributes(context, attributes, addedElement, item);
                     bindEvents(context, methods, addedElement);
                 }
             }
@@ -224,9 +269,13 @@ async function renderFor<T extends State>(
             }
         });
     }
+
+    return renderCount;
 }
 
-function renderBind<T extends State>(context: Context<T>, root: ParentNode = document): void {
+function renderBind<T extends State>(context: Context<T>, root: ParentNode = document): number {
+    let renderCount = 0;
+
     const elements = findElementsByAttribute('data-luscent-bind', root);
 
     for (const element of elements) {
@@ -237,8 +286,12 @@ function renderBind<T extends State>(context: Context<T>, root: ParentNode = doc
 
         // Update input from state
         const value = context.state[key as keyof typeof context.state];
+
+        renderCount += 1;
         element.value = String(value || '');
     }
+
+    return renderCount;
 }
 
 function bindTwoWay<T>(context: Context<T>, methods: Record<string, Method<T>>, updateStateFn: (state: Partial<T>) => Promise<void>, root: ParentNode = document): void {
@@ -307,22 +360,35 @@ async function updateDOM<T extends State>(
     lists: Record<string, List<T>>,
     attributes: Record<string, AttributeGetter<T>>,
     root: ParentNode = document
-): Promise<void> {
+): Promise<number> {
+    let renderCount = 0;
+
     // First, render all conditionals
-    await renderIf(context, getters, methods, conditions, lists, attributes, root);
+    renderCount += await renderIf(context, getters, methods, conditions, lists, attributes, root);
 
     // Then render lists (for loops)
-    await renderFor(context, getters, methods, conditions, lists, attributes, root);
+    renderCount += await renderFor(context, getters, methods, conditions, lists, attributes, root);
 
     // Then render regular values
-    await renderValue(context, getters, root);
+    renderCount += await renderValue(context, getters, root);
 
     // Then update attributes
-    renderAttributes(context, attributes, root);
+    renderCount += renderAttributes(context, attributes, root);
 
     // Then handle two-way binding
-    renderBind(context, root);
+    renderCount += renderBind(context, root);
+
+    return renderCount;
 }
+
+const now = (): string => {
+    const date = new Date();
+    const time = date.toISOString().split('T');
+    const datePart = time[0];
+    const timePart = time[1].split('Z')[0]; // Remove the 'Z' from ISO string
+
+    return `${datePart} ${timePart}`;
+};
 
 // Main start function
 function start<T extends State>(parameters: StartParameters<T>): App<T> {
@@ -332,6 +398,10 @@ function start<T extends State>(parameters: StartParameters<T>): App<T> {
     const conditions = parameters.conditions || {};
     const lists = parameters.lists || {};
     const attributes = parameters.attributes || {};
+    const options: Options = {
+        ...{ debug: { enabled: false, showRenderCount: false } },
+        ...parameters.options,
+    };
 
     const context: Context<T> = { state };
 
@@ -341,7 +411,11 @@ function start<T extends State>(parameters: StartParameters<T>): App<T> {
         Object.assign(context.state, newState);
 
         // Re-render DOM
-        await updateDOM(context, getters, methods, conditions, lists, attributes);
+        const renderCount = await updateDOM(context, getters, methods, conditions, lists, attributes);
+
+        if (options.debug.enabled && options.debug.showRenderCount) {
+            console.debug(`[${now()}] Luscent Render Count: ${renderCount}`);
+        }
 
         // Bind events and two-way binding
         bindEvents(context, methods, document);
@@ -351,9 +425,16 @@ function start<T extends State>(parameters: StartParameters<T>): App<T> {
     // Initial render
     setTimeout(async () => {
         await updateDOM(context, getters, methods, conditions, lists, attributes);
+
+        const renderCount = await updateDOM(context, getters, methods, conditions, lists, attributes);
+
+        if (options.debug.enabled && options.debug.showRenderCount) {
+            console.debug(`[${now()}] Luscent Render Count: ${renderCount}`);
+        }
+
         bindEvents(context, methods, document);
         bindTwoWay(context, methods, updateState, document);
-        console.log('Luscent initialized successfully');
+        console.log(`[${now()}] Luscent initialized successfully`);
     }, 0);
 
     return { updateState };
